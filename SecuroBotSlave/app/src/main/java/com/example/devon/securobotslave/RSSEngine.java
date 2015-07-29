@@ -9,7 +9,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Devon on 7/6/2015.
@@ -24,18 +28,15 @@ public class RSSEngine {
     private XmlPullParserFactory xmlFactoryObject;
     public volatile boolean processing = false;
     private boolean processingFailure = false;
-    //private HashMap<String, String> finalURL = new HashMap<>();
-    private ArrayList<String> URLList = new ArrayList<String>();
-    //private String keys[];
+    //private ArrayList<String> URLList = new ArrayList<String>();
+    private static final int queueSize = 10;
+    private Queue URLList = new ArrayBlockingQueue(queueSize);
     Random r = new Random();
 
     public RSSEngine() {
         URLList.add("https://nakedsecurity.sophos.com/feed/");
         //URLList.add("https://www.sans.org/webcasts/rss/");
         //URLList.add("http://www.theregister.co.uk/headlines.rss");
-        //keys = finalURL.keySet().toArray(new String[finalURL.keySet().size()]); //convert the set of keys to an array of strings
-
-
     }
 
     public String getTitle(){
@@ -128,8 +129,15 @@ public class RSSEngine {
 
         //set a random url for the search if no url specified
         Log.d("RSS", "URL list size: " + URLList.size());
-        int rn = r.nextInt(URLList.size()-0);
-        urlString = URLList.get(rn);
+        int rn = r.nextInt(URLList.size() - 0);
+        Iterator iterator = URLList.iterator();
+        String tmp = iterator.next().toString();
+        while(rn > 0) {
+            Log.d("RSS", tmp);
+            tmp = iterator.next().toString();
+            rn--;
+        }
+        urlString = tmp;
 
         Thread thread = new Thread(new Runnable(){
             @Override
@@ -171,15 +179,27 @@ public class RSSEngine {
     }
 
     public void printContent() {
-        for(String q : URLList) {
-            Log.d("RSS", q);
+        Iterator iterator = URLList.iterator();
+        while(iterator.hasNext()) {
+            Log.d("RSS", iterator.next().toString());
         }
     }
 
-    public void addContent(ArrayList<String> content) {
+    public void addContent(Queue content) {
         if(content!=null) {
-            for(String c : content) {
-                if(!URLList.contains(c)) URLList.add(c);
+            while(content.size()>0) {
+                String c = content.remove().toString();
+                if(!URLList.contains(c) && URLList.size()+1<queueSize) {
+                    URLList.add(c);
+                    Log.d("RSS", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                }
+                else {
+                    URLList.remove();  //if queue is at capacity, dequeue to add space for new content
+                    if(!URLList.contains(c) && URLList.size()+1<queueSize) {
+                        URLList.add(c);
+                        Log.d("RSS", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                    }
+                }
             }
         }
 

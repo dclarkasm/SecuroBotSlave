@@ -15,7 +15,7 @@ public class ActionEngine {
     private QuizEngine quizE = new QuizEngine();
     private JokeEngine jokeE = new JokeEngine();
     private TipEngine tipE = new TipEngine();
-    private TwitterEngine twitE = new TwitterEngine();
+    protected TwitterEngine twitE = new TwitterEngine();
     Random r = new Random();
 
     public static final int ACTION_TWEET = 0;
@@ -97,16 +97,16 @@ public class ActionEngine {
     }
 
     public void executeTimelineSearch(boolean speak) {
-        //fetchContent();
-        try{
-            if(speak) {
+        if(speak) {
+            int rn = r.nextInt(2-0);
+            if(rn == 0) {
                 executeSpeech("Check out my latest status update. ");
                 twitE.speakLatestStatus();
             }
-        }
-        catch(Exception e) {
-            Log.d("TWITTER", "Caught an exception! - execute timeline search");
-            e.printStackTrace();
+            else {
+                executeSpeech("I just red this on twitter.");
+                twitE.speakLatestTweet();
+            }
         }
     }
 
@@ -156,24 +156,14 @@ public class ActionEngine {
     }
 
     public void executeTip() {
-        executeSpeech(tipE.generateGreeting());
+        executeSpeech(tipE.generateTip());
     }
 
-    /*
-    public static final int ACTION_TWEET = 0;
-    public static final int ACTION_RSS = 1;
-    public static final int ACTION_JOKE = 2;
-    public static final int ACTION_QUIZ = 3;
-    public static final int ACTION_PAGE = 4;
-    public static final int ACTION_TIP = 5;
-
-    private RSSEngine RSSFeed;
-    private QuizEngine quizE = new QuizEngine();
-    private JokeEngine jokeE = new JokeEngine();
-    private TipEngine tipE = new TipEngine();
-     */
     public void fetchContent(){
         twitE.getTimeline();
+    }
+
+    public void populateContent() {
         //twitter adds all tweet content to itself automatically
         quizE.addContent(twitE.getContent(Tweet.SECUROBOT_QUIZ));
         RSSFeed.addContent(twitE.getContent(Tweet.SECUROBOT_RSSFEED));

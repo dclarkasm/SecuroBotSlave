@@ -18,9 +18,11 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
 
 
 public class SecuroBotSlaveMain extends Activity {
@@ -135,6 +137,15 @@ public class SecuroBotSlaveMain extends Activity {
         mHandler = new Handler();
 
         startRepeatingTask();
+
+        Queue testQueue = new ArrayBlockingQueue(3);
+        testQueue.add(1);
+        testQueue.add(2);
+        testQueue.add(3);
+        Iterator iterator = testQueue.iterator();
+        while(iterator.hasNext()) {
+            Log.d("TestIterator", "found: " + iterator.next());
+        }
     }
 
 //**************************************************************************************************
@@ -335,11 +346,13 @@ public class SecuroBotSlaveMain extends Activity {
     void startRepeatingTask() {
         openWebPage.run();
         fetchContent.run();
+        populateContent.run();
     }
 
     void stopRepeatingTask() {
         mHandler.removeCallbacks(openWebPage);
         mHandler.removeCallbacks(fetchContent);
+        mHandler.removeCallbacks(populateContent);
     }
 
     String lastURL = "";
@@ -395,6 +408,22 @@ public class SecuroBotSlaveMain extends Activity {
                 mHandler.postDelayed(fetchContent, 930000);
             }
             else mHandler.postDelayed(fetchContent, 50);
+        }
+    };
+
+    Runnable populateContent = new Runnable() {
+        @Override
+        public void run() {
+            if(action!=null) {
+                if(action.twitE.getContentIsFetched()) {
+                    Log.d("PopulateContent", "Placing content now...");
+                    action.populateContent();
+                    action.twitE.setContentFetched(false);
+                    Log.d("PopulateContent", "Placed content in designated classes");
+                }
+                mHandler.postDelayed(populateContent, 1000);
+            }
+            else mHandler.postDelayed(populateContent, 50);
         }
     };
 }

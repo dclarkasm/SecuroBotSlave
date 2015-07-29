@@ -3,14 +3,19 @@ package com.example.devon.securobotslave;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Devon on 7/6/2015.
  */
 public class TipEngine {
     Random r = new Random();
-    private ArrayList<String> tips = new ArrayList<String>();
+    private static final int queueSize = 10;
+    private Queue tips = new ArrayBlockingQueue(queueSize);        //a queue of size 10
 
     public TipEngine() {
         /*tips.add("Keep your computer safe by choosing a password that includes letters," +
@@ -51,21 +56,43 @@ public class TipEngine {
         "on the Internet.");*/
     }
 
-    public String generateGreeting() {
-        int rn = r.nextInt(tips.size()-0);
-        return "Here's a tip. " + tips.get(rn);
+    public String generateTip() {
+        int rn = r.nextInt(tips.size() - 0);
+        Iterator iterator = tips.iterator();
+        String tmp = iterator.next().toString();
+        while(rn > 0) {
+            Log.d("Tip", tmp);
+            tmp = iterator.next().toString();
+            rn--;
+        }
+
+        return "Here's a tip. " + tmp;
     }
 
     public void printContent() {
-        for(String q : tips) {
-            Log.d("Tip", q);
+        Iterator iterator = tips.iterator();
+        while(iterator.hasNext()) {
+            Log.d("Tip", iterator.next().toString());
         }
     }
 
-    public void addContent(ArrayList<String> content) {
+    public void addContent(Queue content) {
         if(content!=null) {
-            for(String c : content) {
-                if(!tips.contains(c)) tips.add(c);
+            while(content.size()>0) {
+                String c = content.remove().toString();
+                if(!tips.contains(c) && tips.size()+1<queueSize) {
+                    tips.add(c);
+                    Log.d("Tip", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                }
+                else {
+                    String removed = tips.remove().toString();
+                    Log.d("Tip", "\nJust removed:\n\n" + removed
+                            + "\n\nfrom front of queue.\n"); //if queue is at capacity, dequeue to add space for new content
+                    if(!tips.contains(c) && tips.size()+1<queueSize) {
+                        tips.add(c);
+                        Log.d("Tip", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                    }
+                }
             }
         }
 

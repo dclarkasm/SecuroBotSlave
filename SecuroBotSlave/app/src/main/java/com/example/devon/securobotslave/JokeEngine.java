@@ -3,7 +3,10 @@ package com.example.devon.securobotslave;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Created by Devon on 7/6/2015.
@@ -14,7 +17,9 @@ public class JokeEngine {
             "I heard this great joke the other day. ",
             "A computer friend of mine told me this funny joke. "
     };
-    private ArrayList<String> jokes = new ArrayList<String>();
+
+    private static final int queueSize = 10;
+    private Queue jokes = new ArrayBlockingQueue(queueSize);
 
     public JokeEngine() {
         jokes.add("A guy walks into a bar. Ouch.");
@@ -38,19 +43,40 @@ public class JokeEngine {
     public String generateJoke() {
         int rn1 = r.nextInt(intros.length-0);
         int rn2 = r.nextInt(jokes.size()-0);
-        return intros[rn1] + jokes.get(rn2);
+        Iterator iterator = jokes.iterator();
+        String tmp = iterator.next().toString();
+        while(rn2 > 0) {
+            Log.d("Joke", tmp);
+            tmp = iterator.next().toString();
+            rn2--;
+        }
+        return intros[rn1] + tmp;
     }
 
     public void printContent() {
-        for(String q : jokes) {
-            Log.d("Joke", q);
+        Iterator iterator = jokes.iterator();
+        while(iterator.hasNext()) {
+            Log.d("Joke", iterator.next().toString());
         }
     }
 
-    public void addContent(ArrayList<String> content) {
+    public void addContent(Queue content) {
         if(content!=null) {
-            for(String c : content) {
-                if(!jokes.contains(c)) jokes.add(c);
+            while(content.size()>0) {
+                String c = content.remove().toString();
+                if(!jokes.contains(c) && jokes.size()+1<queueSize) {
+                    jokes.add(c);
+                    Log.d("Joke", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                }
+                else {
+                    String removed = jokes.remove().toString();
+                    Log.d("Joke", "\nJust removed:\n\n" + removed
+                            + "\n\nfrom front of queue.\n"); //if queue is at capacity, dequeue to add space for new content
+                    if(!jokes.contains(c) && jokes.size()+1<queueSize) {
+                        jokes.add(c);
+                        Log.d("Joke", "\nJust added:\n\n" + c + "\n\nto end of queue.\n");
+                    }
+                }
             }
         }
 

@@ -8,7 +8,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import twitter4j.Query;
 import twitter4j.QueryResult;
@@ -26,6 +28,7 @@ import twitter4j.conf.ConfigurationBuilder;
  */
 public class TwitterEngine {
     public TTSEngine engine;
+    /*
     private ArrayList<String> parsedReTweets = new ArrayList<String>(); //list of the most recent retweets for speaking (parsed)
     private ArrayList<String> parsedTips = new ArrayList<String>();
     private ArrayList<String> parsedQuizLinks = new ArrayList<String>();
@@ -34,11 +37,21 @@ public class TwitterEngine {
     private ArrayList<String> parsedArticleLinks = new ArrayList<String>();
     private ArrayList<Tweet> parsedRandTweets = new ArrayList<Tweet>(); //list of the most recent random tweets for speaking (parsed)
     private ArrayList<Tweet> parsedStatuses = new ArrayList<Tweet>(); //list of the most recent status updates for speaking (parsed)
+    */
+    private Queue parsedReTweets = new LinkedList(); //list of the most recent retweets for speaking (parsed)
+    private Queue parsedTips = new LinkedList();
+    private Queue parsedQuizLinks = new LinkedList();
+    private Queue parsedRSSLinks = new LinkedList();
+    private Queue parsedJokes = new LinkedList();
+    private Queue parsedArticleLinks = new LinkedList();
+    private Queue parsedRandTweets = new LinkedList(); //list of the most recent random tweets for speaking (parsed)
+    private Queue parsedStatuses = new LinkedList(); //list of the most recent status updates for speaking (parsed)
     Twitter twitter;
     private static final String TWITTER_KEY = "JlxXwwVxSH8KuiqIktrNE2VQp";
     private static final String TWITTER_SECRET = "4m1kuoWKOrHDLX7CulAs6uAzEKpjFUWUkweWFunQCXlZCVpGXm";
     private static final String TWITTER_TOKEN = "3364737443-ilf4qCoDyaKcsD5fZME80qGpwmfMiv1yDgMaoJM";
     private static final String TOKEN_SECRET = "YLZbvOwFOSa6akO50Pur3aTS059QTl5qUL4c8BScwHKA6";
+    private boolean contentFetched = false;
 
     public TwitterEngine() {
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -55,6 +68,14 @@ public class TwitterEngine {
         new FetchRandomTweets().execute(text);
     }
 
+    public boolean getContentIsFetched() {
+        return contentFetched;
+    }
+
+    public void setContentFetched(boolean status) {
+        contentFetched = status;
+    }
+
     public void getTimeline() {
         new FetchTimeline().execute("");
     }
@@ -69,7 +90,7 @@ public class TwitterEngine {
                 for (twitter4j.Status status : statuses) {
                     Log.d("Twitter", "@" + status.getUser().getScreenName() + " - " + status.getText());
                     Tweet newTweet = new Tweet(status);
-                    parsedStatuses.add(newTweet);
+                    parsedStatuses.add(newTweet.getContent());
                     switch(newTweet.getContentType()) {
                         case Tweet.SECUROBOT_ARTICLE:
                             if(!parsedArticleLinks.contains(newTweet.getContent())) {
@@ -103,6 +124,7 @@ public class TwitterEngine {
                             break;
                         default: break;
                     }
+                    contentFetched = true;
                 }
             } catch (TwitterException te) {
                 te.printStackTrace();
@@ -112,10 +134,14 @@ public class TwitterEngine {
         }
 
         @Override
-        protected void onPostExecute(String result) {}
+        protected void onPostExecute(String result) {
+            contentFetched = true;
+        }
 
         @Override
-        protected void onPreExecute() {}
+        protected void onPreExecute() {
+            contentFetched = false;
+        }
 
         @Override
         protected void onProgressUpdate(Void... values) {}
@@ -154,16 +180,32 @@ public class TwitterEngine {
         protected void onProgressUpdate(Void... values) {}
     }
 
-    public ArrayList<String> getContent(final int contentType) {
+    public Queue getContent(final int contentType) {
+        Queue tmp = new LinkedList();
         switch(contentType) {
-            case Tweet.SECUROBOT_ARTICLE: return parsedArticleLinks;
-            case Tweet.SECUROBOT_JOKE: return parsedJokes;
-            case Tweet.SECUROBOT_QUIZ: return parsedQuizLinks;
-            case Tweet.SECUROBOT_RSSFEED: return parsedRSSLinks;
-            case Tweet.SECUROBOT_TIP: return parsedTips;
+            case Tweet.SECUROBOT_ARTICLE:
+                tmp.addAll(parsedArticleLinks);
+                parsedArticleLinks.clear();
+                break;
+            case Tweet.SECUROBOT_JOKE:
+                tmp.addAll(parsedJokes);
+                parsedJokes.clear();
+                break;
+            case Tweet.SECUROBOT_QUIZ:
+                tmp.addAll(parsedQuizLinks);
+                parsedQuizLinks.clear();
+                break;
+            case Tweet.SECUROBOT_RSSFEED:
+                tmp.addAll(parsedRSSLinks);
+                parsedRSSLinks.clear();
+                break;
+            case Tweet.SECUROBOT_TIP:
+                tmp.addAll(parsedTips);
+                parsedTips.clear();
+                break;
             default: break;
         }
-        return null;
+        return tmp;
     }
 
     public void setTTSEngine(TTSEngine e) {
@@ -171,11 +213,11 @@ public class TwitterEngine {
     }
 
     public void speakLatestTweet(){
-        engine.speak(parsedReTweets.get(0), TextToSpeech.QUEUE_FLUSH, null);
+        engine.speak(parsedReTweets.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
     public void speakLatestStatus() {
-        engine.speak(parsedStatuses.get(0).getTweet(), TextToSpeech.QUEUE_FLUSH, null);
+        engine.speak(parsedStatuses.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
     public void updateStatus(String text) {

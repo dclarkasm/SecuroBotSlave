@@ -111,7 +111,7 @@ public class SecuroBotSlaveMain extends Activity {
          */
 
 //**************************************************************************************************
-                                //SecuroBot setup stuff
+                                //SecuroBot setup stuffs
 //**************************************************************************************************
         webPageView = (WebView) findViewById(R.id.webview);
         WebSettings webPageSettings = webPageView.getSettings();

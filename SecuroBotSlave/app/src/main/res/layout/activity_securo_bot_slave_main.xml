@@ -12,39 +12,42 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textSize="40dp"
         android:text="Cyber Forensics Research and Education Group"
         android:id="@+id/textView2"
         android:textColor="#5AB745"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="58dp" />
+        android:layout_below="@+id/imageView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/imageView"
         android:src="@drawable/cfreg_logo"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="Tagliatela College of Engineering"
+        android:textSize="40dp"
         android:id="@+id/textView"
         android:textColor="#5AB745"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginTop="79dp"
-        android:layout_alignParentTop="true"
+        android:layout_above="@+id/imageView"
         android:layout_centerHorizontal="true" />
 
-    <WebView  xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/webview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        />
+
+        <WebView  xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/webview"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            />
 
 </RelativeLayout>

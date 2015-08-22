@@ -16,7 +16,7 @@ public class ActionEngine {
     private JokeEngine jokeE = new JokeEngine();
     private TipEngine tipE = new TipEngine();
     protected TwitterEngine twitE = new TwitterEngine();
-    Random r = new Random();
+    private Random r = new Random();
 
     public static final int ACTION_TWEET = 0;
     public static final int ACTION_RSS = 1;
@@ -24,6 +24,8 @@ public class ActionEngine {
     public static final int ACTION_QUIZ = 3;
     public static final int ACTION_PAGE = 4;
     public static final int ACTION_TIP = 5;
+    public static final int ACTION_PICTURE = 6;
+    public static final int ACTION_HACKED = 7;
 
     private int currentAction;
 
@@ -69,7 +71,7 @@ public class ActionEngine {
             case ACTION_QUIZ: executeQuiz(); break;
             case ACTION_PAGE: executePage(); break;
             case ACTION_TIP: executeTip(); break;
-            default: executeTimelineSearch(true); return;
+            default: Log.d("ActionEngine", "Unknown Action"); return;
         }
         currentAction = ActivityType;
     }

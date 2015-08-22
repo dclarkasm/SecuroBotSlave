@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -32,6 +36,7 @@ public class SecuroBotSlaveMain extends Activity {
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
+    private static final int REQUEST_ACTION_PICK = 4;
 
     /**
      * Name of the connected device
@@ -55,7 +60,7 @@ public class SecuroBotSlaveMain extends Activity {
 
     //**********************************************
     private Handler mHandler;
-    Random r = new Random();
+    private Random r = new Random();
     WebView webPageView;
     boolean actionEnable = true;
     Queue pageQueue = new LinkedList();
@@ -114,6 +119,7 @@ public class SecuroBotSlaveMain extends Activity {
                                 //SecuroBot setup stuff
 //**************************************************************************************************
         webPageView = (WebView) findViewById(R.id.webview);
+        webPageView.setWebViewClient(new WebViewClient());
         WebSettings webPageSettings = webPageView.getSettings();
         webPageSettings.setJavaScriptEnabled(true);
         webPageView.setVisibility(View.INVISIBLE);
@@ -278,7 +284,69 @@ public class SecuroBotSlaveMain extends Activity {
                             Toast.LENGTH_SHORT).show();
                     this.finish();
                 }
+            case REQUEST_ACTION_PICK:
+                if (resultCode == RESULT_OK) {
+                    int actionType = data.getIntExtra("action", -1);
+
+                    startActivityTimer();
+                    switch(actionType){
+                        case ActionEngine.ACTION_PAGE:
+                            action.executePage();
+                            pageQueue.add(action.getWebPage());
+                            actionEnable = false;
+                            break;
+                        case ActionEngine.ACTION_QUIZ:
+                            action.executeQuiz();
+                            pageQueue.add(action.getQuiz());
+                            actionEnable = false;
+                            break;
+                        case ActionEngine.ACTION_JOKE:
+                            action.executeActivity(ActionEngine.ACTION_JOKE);
+                            stopActivityTimer();
+                            //sendMessage("CC");
+                            break;
+                        case ActionEngine.ACTION_TIP:
+                            action.executeActivity(ActionEngine.ACTION_TIP);
+                            stopActivityTimer();
+                            //sendMessage("CC");
+                            break;
+                        case ActionEngine.ACTION_RSS:
+                            action.executeActivity(ActionEngine.ACTION_RSS);
+                            stopActivityTimer();
+                            //sendMessage("CC");
+                            break;
+                        case ActionEngine.ACTION_TWEET:
+                            action.executeActivity(ActionEngine.ACTION_TWEET);
+                            stopActivityTimer();
+                            //sendMessage("CC");
+                            break;
+                        default:
+                            Log.d("Action Chooser", "Uknown command: " + actionType);
+                            stopActivityTimer();
+                            //sendMessage("CC");
+                            break;
+                    }
+                }
+                else
+                {
+                    stopActivityTimer();
+                    //sendMessage("CC");
+                }
         }
+    }
+
+    private void startActivityTimer(){
+        mHandler.removeCallbacks(interactionTimer);
+        mHandler.removeCallbacks(timerInterrupt);
+        interactionTimer.run();
+        sendMessage("RS");  //send the Reset message to the master to reset the
+        Log.d("Timer", "Activity Started. Timer was reset.");
+    }
+
+    private void stopActivityTimer() {
+        timerInterrupt.run();
+        mHandler.removeCallbacks(timerInterrupt);
+        Log.d("Timer", "Activity Stopped. Timer was stopped.");
     }
 
     /**
@@ -299,43 +367,11 @@ public class SecuroBotSlaveMain extends Activity {
 
     public void processMessage(String message){
         if(actionEnable){
-            switch(message){
-                case "Webpage":
-                    action.executeGreeting();
-                    action.executePage();
-                    pageQueue.add(action.getWebPage());
-                    interactionTimer.run();
-                    actionEnable = false;
-                    break;
-                case "Quiz":
-                    action.executeGreeting();
-                    action.executeQuiz();
-                    pageQueue.add(action.getQuiz());
-                    interactionTimer.run();
-                    actionEnable = false;
-                    break;
-                case "Joke":
-                    action.executeGreeting();
-                    action.executeActivity(ActionEngine.ACTION_JOKE);
-                    sendMessage("CC");
-                    break;
-                case "Tip":
-                    action.executeGreeting();
-                    action.executeActivity(ActionEngine.ACTION_TIP);
-                    sendMessage("CC");
-                    break;
-                case "RSS":
-                    action.executeGreeting();
-                    action.executeActivity(ActionEngine.ACTION_RSS);
-                    sendMessage("CC");
-                    break;
-                case "Tweet":
-                    action.executeGreeting();
-                    action.executeActivity(ActionEngine.ACTION_TWEET);
-                    sendMessage("CC");
-                    break;
-                default: break;
-            }
+
+            action.executeGreeting();
+            interactionTimer.run();
+            Intent pickActionIntent = new Intent(this, ActionChooserActivity.class);
+            startActivityForResult(pickActionIntent,REQUEST_ACTION_PICK);
         }
         else sendMessage("CC");
     }

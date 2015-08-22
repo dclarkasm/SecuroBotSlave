@@ -31,7 +31,7 @@ public class RSSEngine {
     //private ArrayList<String> URLList = new ArrayList<String>();
     private static final int queueSize = 10;
     private Queue URLList = new ArrayBlockingQueue(queueSize);
-    Random r = new Random();
+    private Random r = new Random();
 
     public RSSEngine() {
         URLList.add("https://nakedsecurity.sophos.com/feed/");

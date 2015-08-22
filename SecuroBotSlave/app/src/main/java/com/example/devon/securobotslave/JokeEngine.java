@@ -12,7 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Created by Devon on 7/6/2015.
  */
 public class JokeEngine {
-    Random r = new Random();
+    private Random r = new Random();
     private static final String intros[] = {
             "I heard this great joke the other day. ",
             "A computer friend of mine told me this funny joke. "

@@ -13,7 +13,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Created by Devon on 7/6/2015.
  */
 public class TipEngine {
-    Random r = new Random();
+    private Random r = new Random();
     private static final int queueSize = 10;
     private Queue tips = new ArrayBlockingQueue(queueSize);        //a queue of size 10
 

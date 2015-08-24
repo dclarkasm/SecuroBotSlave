@@ -21,11 +21,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DeviceListActivity"
-            android:configChanges="orientation|keyboardHidden"
-            android:label="Select Device"
-            android:theme="@android:style/Theme.Holo.Dialog" />
-        <activity
             android:name=".ActionChooserActivity"
             android:label="@string/title_activity_action_chooser" >
         </activity>

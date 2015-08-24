@@ -143,7 +143,6 @@ public class ActionEngine {
         while(RSSFeed.processing);
         if(!RSSFeed.isProcessingFailure()) {
             executeSpeech("Check out this article eye just red from " + RSSFeed.getAuthor());    //read is spelled red for phonetics same with I (eye)
-            //webPageView.loadUrl(RSSFeed.getLink());
             while(TTSE.t1.isSpeaking());
             Log.d("WEB PAGE", "Author: " + RSSFeed.getAuthor() + "\nLink: " + RSSFeed.getLink());
         }

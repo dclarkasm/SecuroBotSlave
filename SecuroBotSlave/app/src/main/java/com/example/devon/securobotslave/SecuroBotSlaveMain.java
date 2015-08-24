@@ -1,8 +1,7 @@
 package com.example.devon.securobotslave;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -19,7 +18,9 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.Iterator;
@@ -28,40 +29,22 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 
+import ioio.lib.api.DigitalOutput;
+import ioio.lib.api.IOIO;
+import ioio.lib.api.PwmOutput;
+import ioio.lib.api.exception.ConnectionLostException;
+import ioio.lib.util.BaseIOIOLooper;
+import ioio.lib.util.IOIOLooper;
+import ioio.lib.util.android.IOIOActivity;
 
-public class SecuroBotSlaveMain extends Activity {
-    private static final String TAG = "Bluetooth";
 
-    // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
-    private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
-    private static final int REQUEST_ENABLE_BT = 3;
-    private static final int REQUEST_ACTION_PICK = 4;
-
-    /**
-     * Name of the connected device
-     */
-    private String mConnectedDeviceName = null;
-
-    /**
-     * String buffer for outgoing messages
-     */
-    private StringBuffer mOutStringBuffer;
-
-    /**
-     * Local Bluetooth adapter
-     */
-    private BluetoothAdapter mBluetoothAdapter = null;
-
-    /**
-     * Member object for the chat services
-     */
-    private BluetoothChatService mChatService = null;
-
-    //**********************************************
+public class SecuroBotSlaveMain extends IOIOActivity {
+    private static final int REQUEST_ACTION_PICK = 1;
     private Handler mHandler;
     private Random r = new Random();
     WebView webPageView;
+    FrameLayout chooser;
+    RelativeLayout home;
     boolean actionEnable = true;
     Queue pageQueue = new LinkedList();
     TTSEngine t1;
@@ -76,48 +59,11 @@ public class SecuroBotSlaveMain extends Activity {
         t1 = new TTSEngine(this);
 
 //**************************************************************************************************
-                                //Set up Bluetooth stuff
-//**************************************************************************************************
-        // Get local Bluetooth adapter
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        // If the adapter is null, then Bluetooth is not supported
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
-            this.finish();
-        }
-
-        // If BT is not on, request that it be enabled.
-        // setupChat() will then be called during onActivityResult
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-            // Otherwise, setup the chat session
-        } else if (mChatService == null) {
-            // Initialize the BluetoothChatService to perform bluetooth connections
-            mChatService = new BluetoothChatService(this, BTHandler);
-
-            // Initialize the buffer for outgoing messages
-            mOutStringBuffer = new StringBuffer("");
-        }
-
-        //at this point you could make the device discoverable, but lets just assume
-        //we are using already paired devices for security reasons.
-        //this is a cyber security robot anyway ;)
-        //ensureDiscoverable();
-
-        //then prompt the user to select a device tot connect to (secure method)
-        Intent serverIntent = new Intent(this, DeviceListActivity.class);
-        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-
-        /* insecure method
-        Intent serverIntent = new Intent(getActivity(), DeviceListActivity.class);
-        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_INSECURE);
-         */
-
-//**************************************************************************************************
                                 //SecuroBot setup stuffs
 //**************************************************************************************************
+        chooser = (FrameLayout) findViewById(R.id.chooserLayout);
+        home = (RelativeLayout) findViewById(R.id.homeLayout);
+        chooser.setVisibility(View.INVISIBLE);
         webPageView = (WebView) findViewById(R.id.webview);
         webPageView.setWebViewClient(new WebViewClient());
         WebSettings webPageSettings = webPageView.getSettings();
@@ -132,7 +78,7 @@ public class SecuroBotSlaveMain extends Activity {
                     mHandler.removeCallbacks(interactionTimer);
                     mHandler.removeCallbacks(timerInterrupt);
                     interactionTimer.run();
-                    sendMessage("RS");  //send the Reset message to the master to reset the
+                    //sendMessage("RS");  //send the Reset message to the master to reset the
                     Log.d("Timer", "Touch sensed. Timer was reset.");
                 }
                 return false;
@@ -152,228 +98,55 @@ public class SecuroBotSlaveMain extends Activity {
         while(iterator.hasNext()) {
             Log.d("TestIterator", "found: " + iterator.next());
         }
+
     }
-
-//**************************************************************************************************
-                                    //Bluetooth stuff
-//**************************************************************************************************
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mChatService != null) {
-            mChatService.stop();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // Performing this check in onResume() covers the case in which BT was
-        // not enabled during onStart(), so we were paused to enable it...
-        // onResume() will be called when ACTION_REQUEST_ENABLE activity returns.
-        if (mChatService != null) {
-            // Only if the state is STATE_NONE, do we know that we haven't started already
-            if (mChatService.getState() == BluetoothChatService.STATE_NONE) {
-                // Start the Bluetooth chat services
-                mChatService.start();
-            }
-        }
-    }
-
-    /**
-     * Makes this device discoverable.
-     */
-    private void ensureDiscoverable() {
-        if (mBluetoothAdapter.getScanMode() !=
-                BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-            startActivity(discoverableIntent);
-        }
-    }
-
-    /**
-     * Sends a message.
-     *
-     * @param message A string of text to send.
-     */
-    private void sendMessage(String message) {
-        // Check that we're actually connected before trying anything
-        if (mChatService.getState() != BluetoothChatService.STATE_CONNECTED) {
-            Toast.makeText(this, "No devices connected.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Check that there's actually something to send
-        if (message.length() > 0) {
-            // Get the message bytes and tell the BluetoothChatService to write
-            byte[] send = message.getBytes();
-            mChatService.write(send);
-
-            // Reset out string buffer to zero and clear the edit text field
-            mOutStringBuffer.setLength(0);
-            //mOutEditText.setText(mOutStringBuffer);
-        }
-    }
-
-    /**
-     * The Handler that gets information back from the BluetoothChatService
-     */
-    private final Handler BTHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            //FragmentActivity activity = getActivity();
-            switch (msg.what) {
-                case Constants.MESSAGE_WRITE:
-                    byte[] writeBuf = (byte[]) msg.obj;
-                    // construct a string from the buffer
-                    String writeMessage = new String(writeBuf);
-                    Log.d("Bluetooth", "Wrote message: " + writeMessage);
-                    //Toast.makeText(SecuroBotSlaveMain.this, "Wrote message: " + writeMessage, Toast.LENGTH_SHORT).show();
-                    break;
-                case Constants.MESSAGE_READ:
-                    byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
-                    String readMessage = new String(readBuf, 0, msg.arg1);
-                    Log.d("Bluetooth", "Read message: " + readMessage);
-                    Toast.makeText(SecuroBotSlaveMain.this, "Read message: " + readMessage, Toast.LENGTH_SHORT).show();
-                    processMessage(readMessage);
-                    break;
-                case Constants.MESSAGE_DEVICE_NAME:
-                    // save the connected device's name
-                    mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                    Toast.makeText(SecuroBotSlaveMain.this, "Connected to "
-                            + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                    break;
-                case Constants.MESSAGE_TOAST:
-                    Toast.makeText(SecuroBotSlaveMain.this, msg.getData().getString(Constants.TOAST),
-                            Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    };
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case REQUEST_CONNECT_DEVICE_SECURE:
-                // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
-                    connectDevice(data, true);
-                }
-                break;
-            case REQUEST_CONNECT_DEVICE_INSECURE:
-                // When DeviceListActivity returns with a device to connect
-                if (resultCode == Activity.RESULT_OK) {
-                    connectDevice(data, false);
-                }
-                break;
-            case REQUEST_ENABLE_BT:
-                // When the request to enable Bluetooth returns
-                if (resultCode == Activity.RESULT_OK) {
-                    // Bluetooth is now enabled, so set up a chat session
-                    // Initialize the BluetoothChatService to perform bluetooth connections
-                    mChatService = new BluetoothChatService(this, BTHandler);
-
-                    // Initialize the buffer for outgoing messages
-                    mOutStringBuffer = new StringBuffer("");
-                } else {
-                    // User did not enable Bluetooth or an error occurred
-                    Log.d(TAG, "BT not enabled");
-                    Toast.makeText(this, "Bluetooth was not enebled. Leaving chat",
-                            Toast.LENGTH_SHORT).show();
-                    this.finish();
-                }
             case REQUEST_ACTION_PICK:
                 if (resultCode == RESULT_OK) {
                     int actionType = data.getIntExtra("action", -1);
 
-                    startActivityTimer();
                     switch(actionType){
                         case ActionEngine.ACTION_PAGE:
                             action.executePage();
                             pageQueue.add(action.getWebPage());
                             actionEnable = false;
+                            interactionTimer.run();
                             break;
                         case ActionEngine.ACTION_QUIZ:
                             action.executeQuiz();
                             pageQueue.add(action.getQuiz());
                             actionEnable = false;
+                            interactionTimer.run();
                             break;
                         case ActionEngine.ACTION_JOKE:
                             action.executeActivity(ActionEngine.ACTION_JOKE);
-                            stopActivityTimer();
-                            //sendMessage("CC");
+                            actionEnable = true;
                             break;
                         case ActionEngine.ACTION_TIP:
                             action.executeActivity(ActionEngine.ACTION_TIP);
-                            stopActivityTimer();
-                            //sendMessage("CC");
+                            actionEnable = true;
                             break;
                         case ActionEngine.ACTION_RSS:
                             action.executeActivity(ActionEngine.ACTION_RSS);
-                            stopActivityTimer();
-                            //sendMessage("CC");
+                            actionEnable = true;
                             break;
                         case ActionEngine.ACTION_TWEET:
                             action.executeActivity(ActionEngine.ACTION_TWEET);
-                            stopActivityTimer();
-                            //sendMessage("CC");
+                            actionEnable = true;
                             break;
                         default:
                             Log.d("Action Chooser", "Uknown command: " + actionType);
-                            stopActivityTimer();
-                            //sendMessage("CC");
+                            actionEnable = true;
                             break;
                     }
                 }
                 else
                 {
-                    stopActivityTimer();
-                    //sendMessage("CC");
+                    actionEnable = true;
                 }
         }
-    }
-
-    private void startActivityTimer(){
-        mHandler.removeCallbacks(interactionTimer);
-        mHandler.removeCallbacks(timerInterrupt);
-        interactionTimer.run();
-        sendMessage("RS");  //send the Reset message to the master to reset the
-        Log.d("Timer", "Activity Started. Timer was reset.");
-    }
-
-    private void stopActivityTimer() {
-        timerInterrupt.run();
-        mHandler.removeCallbacks(timerInterrupt);
-        Log.d("Timer", "Activity Stopped. Timer was stopped.");
-    }
-
-    /**
-     * Establish connection with other divice
-     *
-     * @param data   An {@link Intent} with {@link DeviceListActivity#EXTRA_DEVICE_ADDRESS} extra.
-     * @param secure Socket Security type - Secure (true) , Insecure (false)
-     */
-    private void connectDevice(Intent data, boolean secure) {
-        // Get the device MAC address
-        String address = data.getExtras()
-                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-        // Get the BluetoothDevice object
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-        // Attempt to connect to the device
-        mChatService.connect(device, secure);
-    }
-
-    public void processMessage(String message){
-        if(actionEnable){
-
-            action.executeGreeting();
-            interactionTimer.run();
-            Intent pickActionIntent = new Intent(this, ActionChooserActivity.class);
-            startActivityForResult(pickActionIntent,REQUEST_ACTION_PICK);
-        }
-        else sendMessage("CC");
     }
 
 //**************************************************************************************************
@@ -429,7 +202,6 @@ public class SecuroBotSlaveMain extends Activity {
         public void run() {
             actionEnable = true;
             mHandler.removeCallbacks(interactionTimer);
-            sendMessage("CC");  //send the Command Complete message to SecuroBotMaster via BT
             Log.d("Timer", "Delay Stopped.");
         }
     };
@@ -462,4 +234,275 @@ public class SecuroBotSlaveMain extends Activity {
             else mHandler.postDelayed(populateContent, 50);
         }
     };
+/*
+    final Handler viewHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+
+        }
+    };
+*/
+    Runnable choiceTimer = new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(choiceTimerInterrupt, 30000);
+        }
+    };
+
+    Runnable choiceTimerInterrupt = new Runnable() {
+        @Override
+        public void run() {
+            setResult(RESULT_CANCELED);
+            stopChoiceRunnable();
+        }
+    };
+
+    private void stopChoiceRunnable() {
+        mHandler.removeCallbacks(choiceTimer);
+        mHandler.removeCallbacks(choiceTimerInterrupt);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                chooser.setVisibility(View.INVISIBLE);
+                home.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    public void articleAction(View v) {
+        stopChoiceRunnable();
+        action.executePage();
+        pageQueue.add(action.getWebPage());
+        actionEnable = false;
+        interactionTimer.run();
+    }
+
+    public void quizAction(View v) {
+        stopChoiceRunnable();
+        action.executeQuiz();
+        pageQueue.add(action.getQuiz());
+        actionEnable = false;
+        interactionTimer.run();
+    }
+
+    public void jokeAction(View v) {
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_JOKE);
+        actionEnable = true;
+    }
+
+    public void pictureAction(View v) {
+        /*
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_PICTURE);
+        actionEnable = true;
+        */
+    }
+
+    public void hackedAction(View v) {
+        /*
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_HACKED);
+        actionEnable = true;
+        */
+    }
+
+    public void rssAction(View v) {
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_RSS);
+        actionEnable = true;
+    }
+
+    public void tipAction(View v) {
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_TIP);
+        actionEnable = true;
+    }
+
+    public void tweetAction(View v) {
+        stopChoiceRunnable();
+        action.executeActivity(ActionEngine.ACTION_TWEET);
+        actionEnable = true;
+    }
+
+    public void randomAction(View v) {
+        stopChoiceRunnable();
+        action.executeRandActivity();
+        actionEnable = true;
+    }
+
+
+//**************************************************************************************************
+    //Android IOIO stuff
+//**************************************************************************************************
+    /**
+     * This is the thread on which all the IOIO activity happens. It will be run
+     * every time the application is resumed and aborted when it is paused. The
+     * method setup() will be called right after a connection with the IOIO has
+     * been established (which might happen several times!). Then, loop() will
+     * be called repetitively until the IOIO gets disconnected.
+     */
+    class Looper extends BaseIOIOLooper {
+        /** The on-board LED. */
+        private DigitalOutput led_;
+        private IRSensor iRSensors = new IRSensor(33);
+        private PwmOutput pwm;
+        int newPos, currentPos;
+
+        /**
+         * Called every time a connection with IOIO has been established.
+         * Typically used to open pins.
+         *
+         * @throws ConnectionLostException
+         *             When IOIO connection is lost.
+         *
+         * @see ioio.lib.util.IOIOLooper
+         */
+        @Override
+        protected void setup() throws ConnectionLostException, InterruptedException {
+            showVersions(ioio_, "IOIO connected!");
+            led_ = ioio_.openDigitalOutput(0, true);
+            iRSensors.input = ioio_.openAnalogInput(iRSensors.pin);
+            initIR();
+
+            try {
+                pwm= ioio_.openPwmOutput(35, 100);  //new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.OPEN_DRAIN)
+            } catch (ConnectionLostException e) {
+                Log.d("Connection Lost", "IO Connection Lost");
+            }
+        }
+
+        /**
+         * Called repetitively while the IOIO is connected.
+         *
+         * @throws ConnectionLostException
+         *             When IOIO connection is lost.
+         * @throws InterruptedException
+         * 				When the IOIO thread has been interrupted.
+         *
+         * @see ioio.lib.util.IOIOLooper#loop()
+         */
+        @Override
+        public void loop() throws ConnectionLostException, InterruptedException {
+            int re = r.nextInt(100-0); //random number between 0 and 100 for rotation enable
+            int ra = r.nextInt(3-0); //random number between 0 and 100 for rotation angle
+
+            if(actionEnable){
+                if(re <= 1) {  //% chance that the head will rotate
+                    switch(ra){
+                        case 0: newPos = 1000; break;    //limit 600
+                        case 1: newPos = 1550; break;
+                        case 2: newPos = 2000; break;   //limit 2450
+                        default: break;
+                    }
+
+                    if(newPos != currentPos)
+                    {
+                        led_.write(true);
+                        pwm.setPulseWidth(newPos);
+                        currentPos = newPos;
+                        Log.d("ROTATE", "Moving to position: " + newPos + "...");
+                        Thread.sleep(1000);
+                        Log.d("ROTATE", "At position: " + newPos);
+                        initIR();
+                    }
+                }
+                else{
+                    float measVal = iRSensors.input.read();
+                    float measVolt = iRSensors.input.getVoltage();
+                    if(iRSensors.motionDetect(measVal, measVolt)) {
+                        led_.write(false);
+                        Log.d("MOTION", "Detected motion!"
+                                        + " BaseVal: " + iRSensors.baseValue + "/" + measVal +
+                                        ", BaseVolt: " + iRSensors.baseVolt + "/" + measVolt
+                        );
+
+                        action.executeGreeting();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                home.setVisibility(View.INVISIBLE);
+                                chooser.setVisibility(View.VISIBLE);
+                            }
+                        });
+                        choiceTimer.run();
+                        //Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActionChooserActivity.class);
+                        //startActivityForResult(pickActionIntent,REQUEST_ACTION_PICK);
+                        actionEnable = false;
+
+                        Log.d("IR SENSORS", "reinitializing...");
+                        initIR();
+                    }
+                    else led_.write(true);
+                }
+            } else initIR();
+            Thread.sleep(100);
+        }
+
+        public void initIR() throws ConnectionLostException, InterruptedException {
+            float baseVal=0f, baseVolt=0f;
+
+            for(int i=0; i<iRSensors.iSamples; i++) {
+                baseVal += iRSensors.input.read();
+                baseVolt += iRSensors.input.getVoltage();
+            }
+            iRSensors.initialize(baseVal / iRSensors.iSamples, baseVolt / iRSensors.iSamples);
+/*
+            Log.d("INIT IR", "Base Val: " + baseVal/iRSensors.iSamples +
+                    ", base Volt: " + baseVolt/iRSensors.iSamples);*/
+        }
+
+        /**
+         * Called when the IOIO is disconnected.
+         *
+         * @see ioio.lib.util.IOIOLooper#disconnected()
+         */
+        @Override
+        public void disconnected() {
+            toast("IOIO disconnected");
+        }
+
+        /**
+         * Called when the IOIO is connected, but has an incompatible firmware version.
+         *
+         * @see ioio.lib.util.IOIOLooper#incompatible(IOIO)
+         */
+        @Override
+        public void incompatible() {
+            showVersions(ioio_, "Incompatible firmware version!");
+        }
+    }
+
+    /**
+     * A method to create our IOIO thread.
+     *
+     * @see ioio.lib.util.AbstractIOIOActivity#createIOIOThread()
+     */
+    @Override
+    protected IOIOLooper createIOIOLooper() {
+        return new Looper();
+    }
+
+    private void showVersions(IOIO ioio, String title) {
+        toast(String.format("%s\n" +
+                        "IOIOLib: %s\n" +
+                        "Application firmware: %s\n" +
+                        "Bootloader firmware: %s\n" +
+                        "Hardware: %s",
+                title,
+                ioio.getImplVersion(IOIO.VersionType.IOIOLIB_VER),
+                ioio.getImplVersion(IOIO.VersionType.APP_FIRMWARE_VER),
+                ioio.getImplVersion(IOIO.VersionType.BOOTLOADER_VER),
+                ioio.getImplVersion(IOIO.VersionType.HARDWARE_VER)));
+    }
+
+    private void toast(final String message) {
+        final Context context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 }

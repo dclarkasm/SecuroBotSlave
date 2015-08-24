@@ -1,5 +1,6 @@
 package com.example.devon.securobotslave;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -11,7 +12,9 @@ import android.view.View;
 
 import java.util.Random;
 
-public class ActionChooserActivity extends AppCompatActivity {
+import ioio.lib.util.android.IOIOActivity;
+
+public class ActionChooserActivity extends Activity {
 
     private Intent data = new Intent();
     private Random r = new Random();
@@ -30,7 +33,7 @@ public class ActionChooserActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_action_chooser, menu);
+        //getMenuInflater().inflate(R.menu.menu_action_chooser, menu);
         return true;
     }
 
@@ -52,43 +55,43 @@ public class ActionChooserActivity extends AppCompatActivity {
     Runnable choiceTimer = new Runnable() {
         @Override
         public void run() {
-            mHandler.postDelayed(timerInterrupt, 29000);
+            mHandler.postDelayed(choiceTimerInterrupt, 29000);
         }
     };
 
-    Runnable timerInterrupt = new Runnable() {
+    Runnable choiceTimerInterrupt = new Runnable() {
         @Override
         public void run() {
             setResult(RESULT_CANCELED);
-            stopRunnable();
+            stopChoiceRunnable();
             //mHandler.removeCallbacks(choiceTimer);
             //finish();
             //mHandler.removeCallbacks(timerInterrupt);
         }
     };
 
-    private void stopRunnable() {
+    private void stopChoiceRunnable() {
         mHandler.removeCallbacks(choiceTimer);
-        mHandler.removeCallbacks(timerInterrupt);
+        mHandler.removeCallbacks(choiceTimerInterrupt);
         finish();
     }
 
     public void articleAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_PAGE);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 
     public void quizAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_QUIZ);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 
     public void jokeAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_JOKE);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 
     public void pictureAction(View v) {
@@ -112,19 +115,19 @@ public class ActionChooserActivity extends AppCompatActivity {
     public void rssAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_RSS);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 
     public void tipAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_TIP);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 
     public void randomAction(View v) {
         int randAction = r.nextInt(8-0);
         data.putExtra("action", randAction);
         setResult(RESULT_OK, data);
-        stopRunnable();
+        stopChoiceRunnable();
     }
 }

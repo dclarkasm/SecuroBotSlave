@@ -1,25 +1,16 @@
 package com.example.devon.securobotslave;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.provider.ContactsContract;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -36,6 +27,7 @@ import ioio.lib.api.exception.ConnectionLostException;
 import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
+import java.lang.Math.*;
 
 
 public class SecuroBotSlaveMain extends IOIOActivity {
@@ -253,6 +245,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
         @Override
         public void run() {
             setResult(RESULT_CANCELED);
+            actionEnable = true;
             stopChoiceRunnable();
         }
     };
@@ -292,19 +285,19 @@ public class SecuroBotSlaveMain extends IOIOActivity {
     }
 
     public void pictureAction(View v) {
-        /*
         stopChoiceRunnable();
+        /*
         action.executeActivity(ActionEngine.ACTION_PICTURE);
-        actionEnable = true;
         */
+        actionEnable = true;
     }
 
     public void hackedAction(View v) {
-        /*
         stopChoiceRunnable();
+        /*
         action.executeActivity(ActionEngine.ACTION_HACKED);
-        actionEnable = true;
         */
+        actionEnable = true;
     }
 
     public void rssAction(View v) {
@@ -328,9 +321,22 @@ public class SecuroBotSlaveMain extends IOIOActivity {
     public void randomAction(View v) {
         stopChoiceRunnable();
         action.executeRandActivity();
-        actionEnable = true;
+        switch(action.getCurrentAction()) {
+            case ActionEngine.ACTION_PAGE:
+                pageQueue.add(action.getWebPage());
+                actionEnable = false;
+                interactionTimer.run();
+                break;
+            case ActionEngine.ACTION_QUIZ:
+                pageQueue.add(action.getQuiz());
+                actionEnable = false;
+                interactionTimer.run();
+                break;
+            default:
+                actionEnable = true;
+                break;
+        }
     }
-
 
 //**************************************************************************************************
     //Android IOIO stuff
@@ -347,7 +353,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
         private DigitalOutput led_;
         private IRSensor iRSensors = new IRSensor(33);
         private PwmOutput pwm;
-        int newPos, currentPos;
+        int newPos, currentPos=1550;    //set the initial position (looking straight forward)
 
         /**
          * Called every time a connection with IOIO has been established.
@@ -367,6 +373,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
 
             try {
                 pwm= ioio_.openPwmOutput(35, 100);  //new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.OPEN_DRAIN)
+                pwm.setPulseWidth(currentPos);
             } catch (ConnectionLostException e) {
                 Log.d("Connection Lost", "IO Connection Lost");
             }
@@ -398,12 +405,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
 
                     if(newPos != currentPos)
                     {
-                        led_.write(true);
-                        pwm.setPulseWidth(newPos);
-                        currentPos = newPos;
-                        Log.d("ROTATE", "Moving to position: " + newPos + "...");
-                        Thread.sleep(1000);
-                        Log.d("ROTATE", "At position: " + newPos);
+                        moveToNewPosition();
                         initIR();
                     }
                 }
@@ -437,6 +439,43 @@ public class SecuroBotSlaveMain extends IOIOActivity {
                 }
             } else initIR();
             Thread.sleep(100);
+        }
+
+        private void moveToNewPosition() throws ConnectionLostException, InterruptedException {
+            int ad = 100;   //acceleration distance - distance at which the acceleration take place
+            int peakDelay = 500;   //starting/ending delay (the longest delay)
+            int p1; //bottom peak 1 - acceleration end peak position
+            int p2; //bottom peak 2 - decelleration start peak position
+            boolean direction;  //reverse = false, forward = true
+            int pos = currentPos;
+            double af = 1;  //acceleration factor (multiplied by the peakDelay to get the delay for the current position)
+            int dArrSize = Math.abs(newPos-currentPos);
+            double delayArr[] = new double[dArrSize];
+
+            if(currentPos<newPos) { //fwd
+                p1 = currentPos+ad;
+                p2 = newPos-ad;
+                direction = true;
+            }
+            else {  //rev
+                p1 = newPos+ad;
+                p2 = currentPos-ad;
+                direction = false;
+            }
+
+            for(int i=0, p; i<dArrSize; i++) {
+                p = (direction) ? pos+1 : pos-1;
+                delayArr[i] = (p<=p1) ? -Math.exp(-Math.pow((p-p1),2)/6000) + 1.2 :
+                        (p2<=p) ? -Math.exp(-Math.pow((p-p2),2)/6000) + 1.2 : af;
+            }
+
+            for(int i=0; pos!=newPos; i+=1) {
+                pos = (direction) ? pos+1 : pos-1;  //if forward increase, reverse decrease
+                pwm.setPulseWidth(pos);
+                Thread.sleep(0, (int) Math.floor(delayArr[i] * peakDelay));
+            }
+            Log.d("Position", "Done");
+            currentPos = newPos;
         }
 
         public void initIR() throws ConnectionLostException, InterruptedException {

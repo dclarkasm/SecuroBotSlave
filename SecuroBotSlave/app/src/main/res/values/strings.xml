@@ -4,4 +4,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_action_chooser">ActionChooserActivity</string>
+    <string name="title_activity_activity_chooser">ActivityChooser</string>
+    <string name="title_activity_web_page">WebPageActivity</string>
+    <string name="title_activity_hacked_email_input">HackedEmailInputActivity</string>
 </resources>

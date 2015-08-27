@@ -11,6 +11,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -32,15 +33,13 @@ import java.lang.Math.*;
 
 public class SecuroBotSlaveMain extends IOIOActivity {
     private static final int REQUEST_ACTION_PICK = 1;
+    private static final int REQUEST_WEB_PAGE = 2;
     private Handler mHandler;
     private Random r = new Random();
-    WebView webPageView;
-    FrameLayout chooser;
-    RelativeLayout home;
     boolean actionEnable = true;
-    Queue pageQueue = new LinkedList();
     TTSEngine t1;
     ActionEngine action;
+    int currentPos = 1550;
     //**********************************************
 
     @Override
@@ -49,154 +48,23 @@ public class SecuroBotSlaveMain extends IOIOActivity {
         setContentView(R.layout.activity_securo_bot_slave_main);
 
         t1 = new TTSEngine(this);
-
-//**************************************************************************************************
-                                //SecuroBot setup stuffs
-//**************************************************************************************************
-        chooser = (FrameLayout) findViewById(R.id.chooserLayout);
-        home = (RelativeLayout) findViewById(R.id.homeLayout);
-        chooser.setVisibility(View.INVISIBLE);
-        webPageView = (WebView) findViewById(R.id.webview);
-        webPageView.setWebViewClient(new WebViewClient());
-        WebSettings webPageSettings = webPageView.getSettings();
-        webPageSettings.setJavaScriptEnabled(true);
-        webPageView.setVisibility(View.INVISIBLE);
-
-        webPageView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.d("Timer", "Webpage view touched");
-                if(!actionEnable){    //reset the interaction timer if we are displaying stuff
-                    mHandler.removeCallbacks(interactionTimer);
-                    mHandler.removeCallbacks(timerInterrupt);
-                    interactionTimer.run();
-                    //sendMessage("RS");  //send the Reset message to the master to reset the
-                    Log.d("Timer", "Touch sensed. Timer was reset.");
-                }
-                return false;
-            }
-        });
-
         action = new ActionEngine(t1);
         mHandler = new Handler();
 
         startRepeatingTask();
-
-        Queue testQueue = new ArrayBlockingQueue(3);
-        testQueue.add(1);
-        testQueue.add(2);
-        testQueue.add(3);
-        Iterator iterator = testQueue.iterator();
-        while(iterator.hasNext()) {
-            Log.d("TestIterator", "found: " + iterator.next());
-        }
-
     }
-
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_ACTION_PICK:
-                if (resultCode == RESULT_OK) {
-                    int actionType = data.getIntExtra("action", -1);
-
-                    switch(actionType){
-                        case ActionEngine.ACTION_PAGE:
-                            action.executePage();
-                            pageQueue.add(action.getWebPage());
-                            actionEnable = false;
-                            interactionTimer.run();
-                            break;
-                        case ActionEngine.ACTION_QUIZ:
-                            action.executeQuiz();
-                            pageQueue.add(action.getQuiz());
-                            actionEnable = false;
-                            interactionTimer.run();
-                            break;
-                        case ActionEngine.ACTION_JOKE:
-                            action.executeActivity(ActionEngine.ACTION_JOKE);
-                            actionEnable = true;
-                            break;
-                        case ActionEngine.ACTION_TIP:
-                            action.executeActivity(ActionEngine.ACTION_TIP);
-                            actionEnable = true;
-                            break;
-                        case ActionEngine.ACTION_RSS:
-                            action.executeActivity(ActionEngine.ACTION_RSS);
-                            actionEnable = true;
-                            break;
-                        case ActionEngine.ACTION_TWEET:
-                            action.executeActivity(ActionEngine.ACTION_TWEET);
-                            actionEnable = true;
-                            break;
-                        default:
-                            Log.d("Action Chooser", "Uknown command: " + actionType);
-                            actionEnable = true;
-                            break;
-                    }
-                }
-                else
-                {
-                    actionEnable = true;
-                }
-        }
-    }
-
 //**************************************************************************************************
                                         //Threads
 //**************************************************************************************************
     void startRepeatingTask() {
-        openWebPage.run();
         fetchContent.run();
         populateContent.run();
     }
 
     void stopRepeatingTask() {
-        mHandler.removeCallbacks(openWebPage);
         mHandler.removeCallbacks(fetchContent);
         mHandler.removeCallbacks(populateContent);
     }
-
-    String lastURL = "";
-    Runnable openWebPage = new Runnable() {
-        String blankPage = "about:blank";
-
-        @Override
-        public void run() {
-            if(!pageQueue.isEmpty()){
-                lastURL = (String)pageQueue.remove();
-                webPageView.loadUrl(lastURL);
-                webPageView.setVisibility(View.VISIBLE);
-            }
-            else if(actionEnable && lastURL != blankPage) {
-                lastURL = blankPage;
-                webPageView.loadUrl(lastURL);
-                webPageView.setVisibility(View.INVISIBLE);
-            }
-            mHandler.postDelayed(openWebPage, 100);
-        }
-    };
-
-    //A timer that expires if the user does not interact with screen after X time
-    Runnable interactionTimer = new Runnable(){
-        @Override
-        public void run() {
-            Log.d("Timer", "Called timer");
-            actionEnable = false;
-            Log.d("Timer", "Delay Started...");
-            mHandler.postDelayed(timerInterrupt, 30000);
-        }
-    };
-
-    //this is called by the interaction timer when time has expired, as long as it hasnt been pulled
-    //from the handler
-    Runnable timerInterrupt = new Runnable() {
-        @Override
-        public void run() {
-            actionEnable = true;
-            mHandler.removeCallbacks(interactionTimer);
-            Log.d("Timer", "Delay Stopped.");
-        }
-    };
 
     Runnable fetchContent = new Runnable() {
         @Override
@@ -226,116 +94,73 @@ public class SecuroBotSlaveMain extends IOIOActivity {
             else mHandler.postDelayed(populateContent, 50);
         }
     };
-/*
-    final Handler viewHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
 
-        }
-    };
-*/
-    Runnable choiceTimer = new Runnable() {
-        @Override
-        public void run() {
-            mHandler.postDelayed(choiceTimerInterrupt, 30000);
-        }
-    };
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_ACTION_PICK:
+                if (resultCode == RESULT_OK) {
+                    int actionType = data.getIntExtra("action", -1);
 
-    Runnable choiceTimerInterrupt = new Runnable() {
-        @Override
-        public void run() {
-            setResult(RESULT_CANCELED);
-            actionEnable = true;
-            stopChoiceRunnable();
-        }
-    };
-
-    private void stopChoiceRunnable() {
-        mHandler.removeCallbacks(choiceTimer);
-        mHandler.removeCallbacks(choiceTimerInterrupt);
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                chooser.setVisibility(View.INVISIBLE);
-                home.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    public void articleAction(View v) {
-        stopChoiceRunnable();
-        action.executePage();
-        pageQueue.add(action.getWebPage());
-        actionEnable = false;
-        interactionTimer.run();
-    }
-
-    public void quizAction(View v) {
-        stopChoiceRunnable();
-        action.executeQuiz();
-        pageQueue.add(action.getQuiz());
-        actionEnable = false;
-        interactionTimer.run();
-    }
-
-    public void jokeAction(View v) {
-        stopChoiceRunnable();
-        action.executeActivity(ActionEngine.ACTION_JOKE);
-        actionEnable = true;
-    }
-
-    public void pictureAction(View v) {
-        stopChoiceRunnable();
-        /*
-        action.executeActivity(ActionEngine.ACTION_PICTURE);
-        */
-        actionEnable = true;
-    }
-
-    public void hackedAction(View v) {
-        stopChoiceRunnable();
-        /*
-        action.executeActivity(ActionEngine.ACTION_HACKED);
-        */
-        actionEnable = true;
-    }
-
-    public void rssAction(View v) {
-        stopChoiceRunnable();
-        action.executeActivity(ActionEngine.ACTION_RSS);
-        actionEnable = true;
-    }
-
-    public void tipAction(View v) {
-        stopChoiceRunnable();
-        action.executeActivity(ActionEngine.ACTION_TIP);
-        actionEnable = true;
-    }
-
-    public void tweetAction(View v) {
-        stopChoiceRunnable();
-        action.executeActivity(ActionEngine.ACTION_TWEET);
-        actionEnable = true;
-    }
-
-    public void randomAction(View v) {
-        stopChoiceRunnable();
-        action.executeRandActivity();
-        switch(action.getCurrentAction()) {
-            case ActionEngine.ACTION_PAGE:
-                pageQueue.add(action.getWebPage());
-                actionEnable = false;
-                interactionTimer.run();
+                    switch (actionType) {
+                        case ActionEngine.ACTION_PAGE:
+                            action.executePage();
+                            Intent articleIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
+                            articleIntent.putExtra("URL", action.getWebPage());
+                            startActivityForResult(articleIntent, REQUEST_WEB_PAGE);
+                            actionEnable = false;
+                            break;
+                        case ActionEngine.ACTION_QUIZ:
+                            action.executeQuiz();
+                            Intent quizIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
+                            quizIntent.putExtra("URL", action.getQuiz());
+                            startActivityForResult(quizIntent, REQUEST_WEB_PAGE);
+                            actionEnable = false;
+                            break;
+                        case ActionEngine.ACTION_JOKE:
+                            action.executeActivity(ActionEngine.ACTION_JOKE);
+                            actionEnable = true;
+                            break;
+                        case ActionEngine.ACTION_TIP:
+                            action.executeActivity(ActionEngine.ACTION_TIP);
+                            actionEnable = true;
+                            break;
+                        case ActionEngine.ACTION_RSS:
+                            action.executeActivity(ActionEngine.ACTION_RSS);
+                            actionEnable = true;
+                            break;
+                        case ActionEngine.ACTION_TWEET:
+                            action.executeActivity(ActionEngine.ACTION_TWEET);
+                            actionEnable = true;
+                            break;
+                        case ActionEngine.ACTION_HACKED:
+                            actionEnable = true;
+                        case ActionEngine.ACTION_PICTURE:
+                            actionEnable = true;
+                        default:
+                            Log.d("Action Chooser", "Uknown command: " + actionType);
+                            actionEnable = true;
+                            break;
+                    }
+                } else {
+                    actionEnable = true;
+                }
                 break;
-            case ActionEngine.ACTION_QUIZ:
-                pageQueue.add(action.getQuiz());
-                actionEnable = false;
-                interactionTimer.run();
-                break;
-            default:
+            case REQUEST_WEB_PAGE:
                 actionEnable = true;
                 break;
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(actionEnable) {
+            action.executeGreeting();
+            Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+            startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+            actionEnable = false;
+            Log.d("Main", "Touch detected!");
+        }
+        return false;
     }
 
 //**************************************************************************************************
@@ -353,7 +178,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
         private DigitalOutput led_;
         private IRSensor iRSensors = new IRSensor(33);
         private PwmOutput pwm;
-        int newPos, currentPos=1550;    //set the initial position (looking straight forward)
+        int newPos;    //set the initial position (looking straight forward)
 
         /**
          * Called every time a connection with IOIO has been established.
@@ -420,16 +245,8 @@ public class SecuroBotSlaveMain extends IOIOActivity {
                         );
 
                         action.executeGreeting();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                home.setVisibility(View.INVISIBLE);
-                                chooser.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        choiceTimer.run();
-                        //Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActionChooserActivity.class);
-                        //startActivityForResult(pickActionIntent,REQUEST_ACTION_PICK);
+                        Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+                        startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                         actionEnable = false;
 
                         Log.d("IR SENSORS", "reinitializing...");

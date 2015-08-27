@@ -20,6 +20,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ActivityChooser"
+            android:label="@string/title_activity_activity_chooser" >
+        </activity>
+        <activity
+            android:name=".WebPageActivity"
+            android:label="@string/title_activity_web_page" >
+        </activity>
+        <activity
+            android:name=".HackedEmailInputActivity"
+            android:label="@string/title_activity_hacked_email_input" >
+        </activity>
     </application>
 
 </manifest>

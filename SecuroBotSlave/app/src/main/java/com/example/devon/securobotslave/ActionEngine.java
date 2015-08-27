@@ -1,9 +1,22 @@
 package com.example.devon.securobotslave;
 
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.speech.tts.TextToSpeech;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.Random;
+import java.util.TimerTask;
+import android.os.Handler;
+import java.util.logging.LogRecord;
 
 /**
  * Created by Devon on 7/5/2015.
@@ -49,7 +62,7 @@ public class ActionEngine {
     }
 
     public void executeRandActivity() {
-        int rn = r.nextInt(6-0);
+        int rn = r.nextInt(7-0);
 
         switch(rn) {
             case ACTION_TWEET: executeTimelineSearch(true); break;
@@ -58,6 +71,7 @@ public class ActionEngine {
             case ACTION_QUIZ: executeQuiz(); break;
             case ACTION_PAGE: executePage(); break;
             case ACTION_TIP: executeTip(); break;
+            case ACTION_HACKED: executeHacked(); break;
             default: executeTimelineSearch(true); break;
         }
         currentAction = rn;
@@ -71,6 +85,7 @@ public class ActionEngine {
             case ACTION_QUIZ: executeQuiz(); break;
             case ACTION_PAGE: executePage(); break;
             case ACTION_TIP: executeTip(); break;
+            case ACTION_HACKED: executeHacked(); break;
             default: Log.d("ActionEngine", "Unknown Action"); return;
         }
         currentAction = ActivityType;
@@ -170,5 +185,8 @@ public class ActionEngine {
         RSSFeed.addContent(twitE.getContent(Tweet.SECUROBOT_RSSFEED));
         jokeE.addContent(twitE.getContent(Tweet.SECUROBOT_JOKE));
         tipE.addContent(twitE.getContent(Tweet.SECUROBOT_TIP));
+    }
+
+    public void executeHacked() {
     }
 }

@@ -95,6 +95,20 @@ public class SecuroBotSlaveMain extends IOIOActivity {
         }
     };
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(t1 !=null){
+            //t1.onPause();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        //t1.onResume(this);
+    }
+
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case REQUEST_ACTION_PICK:

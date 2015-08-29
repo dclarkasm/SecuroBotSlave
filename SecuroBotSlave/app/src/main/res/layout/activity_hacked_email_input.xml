@@ -17,7 +17,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Please enter your email address\nto see if you have been hacked."
+        android:text="@string/hibp_instructions_header"
         android:id="@+id/textView3"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:layout_centerHorizontal="true"
@@ -46,12 +46,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cancel"
+            android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/cancel" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="OK"
+            android:text="Back"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/back" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/clear" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search"
+            android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/ok" />
     </LinearLayout>
 
@@ -59,7 +75,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="List of breaches on your account:"
         android:id="@+id/breachHeader"
         android:layout_gravity="center_horizontal" />
 

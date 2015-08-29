@@ -7,4 +7,9 @@
     <string name="title_activity_activity_chooser">ActivityChooser</string>
     <string name="title_activity_web_page">WebPageActivity</string>
     <string name="title_activity_hacked_email_input">HackedEmailInputActivity</string>
+    <string name="standard_breach_header">List of breaches on your account:</string>
+    <string name="no_breach_header">Good news, it appears your email has not been hacked!</string>
+    <string name="hibp_instructions_header">Please enter your email address\nto see if you have been hacked.</string>
+    <string name="title_activity_camera">CameraActivity</string>
+    <string name="camera_greeting">Take a picture with me!</string>
 </resources>

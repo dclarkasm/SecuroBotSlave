@@ -24,6 +24,7 @@ import ioio.lib.util.android.IOIOActivity;
 
 public class ActivityChooser extends Activity {
     private static final int REQUEST_HACKED_EMAIL = 1;
+    private static final int REQUEST_CAMERA = 2;
     private Intent data = new Intent();
     private Random r = new Random();
     Handler mHandler;
@@ -105,8 +106,10 @@ public class ActivityChooser extends Activity {
 
     public void pictureAction(View v) {
         data.putExtra("action", ActionEngine.ACTION_PICTURE);
-        setResult(RESULT_OK, data);
-        stopRunnable();
+        Intent hackedIntent = new Intent(ActivityChooser.this, CameraActivity.class);
+        startActivityForResult(hackedIntent, REQUEST_CAMERA);
+        //setResult(RESULT_OK, data);
+        //stopRunnable();
     }
 
     public void hackedAction(View v) {
@@ -140,6 +143,10 @@ public class ActivityChooser extends Activity {
         switch (requestCode) {
             case REQUEST_HACKED_EMAIL:
                 stopRunnable();
+                break;
+            case REQUEST_CAMERA:
+                stopRunnable();
+                break;
         }
     }
 }

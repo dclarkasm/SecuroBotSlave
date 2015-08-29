@@ -3,8 +3,10 @@ package com.example.devon.securobotslave;
 import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.Queue;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 import twitter4j.Status;
+import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -46,7 +49,7 @@ public class TwitterEngine {
     private Queue parsedArticleLinks = new LinkedList();
     private Queue parsedRandTweets = new LinkedList(); //list of the most recent random tweets for speaking (parsed)
     private Queue parsedStatuses = new LinkedList(); //list of the most recent status updates for speaking (parsed)
-    Twitter twitter;
+    public Twitter twitter;
     private static final String TWITTER_KEY = "JlxXwwVxSH8KuiqIktrNE2VQp";
     private static final String TWITTER_SECRET = "4m1kuoWKOrHDLX7CulAs6uAzEKpjFUWUkweWFunQCXlZCVpGXm";
     private static final String TWITTER_TOKEN = "3364737443-ilf4qCoDyaKcsD5fZME80qGpwmfMiv1yDgMaoJM";
@@ -54,6 +57,7 @@ public class TwitterEngine {
     private boolean contentFetched = false;
 
     public TwitterEngine() {
+        Log.d("Twitter", "Initializing Twitter...");
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
                 .setOAuthConsumerKey(TWITTER_KEY)
@@ -62,6 +66,7 @@ public class TwitterEngine {
                 .setOAuthAccessTokenSecret(TOKEN_SECRET);
         TwitterFactory tf = new TwitterFactory(cb.build());
         twitter = tf.getInstance();
+        Log.d("Twitter", "Twitter initialized");
     }
 
     public void searchOnTwitter(String text) {  //for searching for random things on twitter
@@ -220,7 +225,7 @@ public class TwitterEngine {
         engine.speak(parsedStatuses.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
-    public void updateStatus(String text) {
+    public void updateStatus(String text, File file) {
         try {
             try {
                 // get request token.
@@ -261,8 +266,10 @@ public class TwitterEngine {
                     return;
                 }
             }
-            Status status = twitter.updateStatus(text);
-            Log.d("Twitter", "Successfully updated the status to [" + status.getText() + "].");
+
+            StatusUpdate status = new StatusUpdate(text);
+            if(file!=null) status.setMedia(file);
+            new twitterUploadTask().execute(status);
             return;
         } catch (TwitterException te) {
             te.printStackTrace();
@@ -274,6 +281,31 @@ public class TwitterEngine {
             return;
         }
     }
+
+    private class twitterUploadTask extends AsyncTask<StatusUpdate, Void, String> {
+        @Override
+        protected String doInBackground(StatusUpdate... status) {
+            try {
+                Log.d("Twitter", "Uploading status...");
+                twitter.updateStatus(status[0]);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            /*
+            Toast.makeText(getApplicationContext(),
+                    "Finished uploading image to twitter.", Toast.LENGTH_LONG).show();
+                    */
+            Log.d("Twitter", "Successfully updated the status.");
+            super.onPostExecute(s);
+        }
+    }
+
 
 }
 

@@ -19,9 +19,14 @@ public class TTSEngine implements TextToSpeech.OnInitListener{
 
     public void onPause(){
         if(t1 !=null){
+            Log.d("TTS", "Shutting down TTS...");
             t1.stop();
             t1.shutdown();
         }
+    }
+
+    public void onResume(Context c) {
+        t1 = new TextToSpeech(c, this);
     }
 
     @Override

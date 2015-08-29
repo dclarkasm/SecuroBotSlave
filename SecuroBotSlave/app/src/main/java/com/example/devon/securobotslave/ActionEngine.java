@@ -128,7 +128,7 @@ public class ActionEngine {
     }
 
     public void executeMakeTweet(String text) {
-        twitE.updateStatus(text);
+        //twitE.updateStatus(text);
     }
 
     public void executeRSS(boolean speak) {

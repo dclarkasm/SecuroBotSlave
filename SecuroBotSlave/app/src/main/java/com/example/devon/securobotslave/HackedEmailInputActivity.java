@@ -8,6 +8,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.provider.ContactsContract;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -56,21 +57,27 @@ public class HackedEmailInputActivity extends AppCompatActivity {
     ListView breachListView;
     String[] breachNameArray;
     TextView breachHeader;
-    private String standardHeader;
+    TTSEngine t2;
+    //private String standardHeader;
+    //private final static String noBreachHeader = "Your email has not been breached!";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hacked_email_input);
 
+        t2 = new TTSEngine(this);
+
         Button okButton = (Button) findViewById(R.id.ok);
         Button cancelButton = (Button) findViewById(R.id.cancel);
-        EditText emailAddress = (EditText) findViewById(R.id.emailAddressInput);
+        final EditText emailAddress = (EditText) findViewById(R.id.emailAddressInput);
+        Button clearButton = (Button) findViewById(R.id.clear);
+        Button backButton = (Button) findViewById(R.id.back);
 
         /*
         Testing purposes only
          *************************/
-        new HIBPAPICall().execute(apiURL + "foo@bar.com");  //test URL so I dont have to type every time ;)
+        //new HIBPAPICall().execute(apiURL + "foo@bar.com");  //test URL so I dont have to type every time ;)
         //************************
 
         okButton.setOnClickListener(new View.OnClickListener() {
@@ -79,8 +86,6 @@ public class HackedEmailInputActivity extends AppCompatActivity {
                 EditText email = (EditText) findViewById(R.id.emailAddressInput);
                 String address = email.getText().toString();
 
-                Toast.makeText(getApplicationContext(), "Email address: " + address, Toast.LENGTH_SHORT).show();
-
                 if( address != null && !address.isEmpty()) {
                     String urlString = apiURL + address;
                     new HIBPAPICall().execute(urlString);
@@ -88,7 +93,6 @@ public class HackedEmailInputActivity extends AppCompatActivity {
                 else {
                     Toast.makeText(getApplicationContext(), "Please enter a valid email address.", Toast.LENGTH_LONG).show();
                 }
-                //exit();
             }
         });
 
@@ -96,6 +100,24 @@ public class HackedEmailInputActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 exit();
+            }
+        });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                exit();
+            }
+        });
+
+        clearButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                emailAddress.setText("");
+                breachHeader.setText("");
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
+                        R.layout.hacked_list_view_layout, R.id.hackedListItem, new String[0]);
+                breachListView.setAdapter(adapter);
             }
         });
 
@@ -122,9 +144,24 @@ public class HackedEmailInputActivity extends AppCompatActivity {
         breachListView = (ListView) findViewById(R.id.hackedListView);
 
         breachHeader = (TextView) findViewById(R.id.breachHeader);
-        standardHeader = breachHeader.getText().toString();
 
         interactionTimer.run();
+
+        waitForTTS.run();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(t2 !=null){
+            t2.onPause();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        t2.onResume(this);
     }
 
     @Override
@@ -181,9 +218,25 @@ public class HackedEmailInputActivity extends AppCompatActivity {
     private void exit(){
         mHandler.removeCallbacks(interactionTimer);
         mHandler.removeCallbacks(timerInterrupt);
+        mHandler.removeCallbacks(waitForTTS);
+        mHandler.removeCallbacks(sayGreeting);
         setResult(RESULT_OK);
         finish();
     }
+
+    Runnable waitForTTS = new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(sayGreeting, 1000);
+        }
+    };
+
+    Runnable sayGreeting = new Runnable() {
+        @Override
+        public void run() {
+            t2.speak(getString(R.string.hibp_instructions_header), TextToSpeech.QUEUE_FLUSH, null);
+        }
+    };
 
     private class HIBPAPICall extends AsyncTask<String, Void, String> {
         @Override
@@ -219,13 +272,21 @@ public class HackedEmailInputActivity extends AppCompatActivity {
                         breachNameArray[i] = breaches.get(i).getName();
                     }
 
-                    for(Breach b : breaches) {
-                        b.printBreach();
+                    String speakBreaches = "";
+                    for(int i=0; i<breaches.size(); i++) {
+                        breaches.get(i).printBreach();
+
+                        if(i==(breaches.size()-2)) speakBreaches += breaches.get(i).getName() + ", and ";
+                        else if(i==(breaches.size()-1)) speakBreaches += breaches.get(i).getName();
+                        else speakBreaches += breaches.get(i).getName() + ", ";
                     }
 
+                    breachHeader.setText(R.string.standard_breach_header);
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
                             R.layout.hacked_list_view_layout, R.id.hackedListItem, breachNameArray);
                     breachListView.setAdapter(adapter);
+                    t2.speak("Your email account has been breached through association with " +
+                            speakBreaches, TextToSpeech.QUEUE_FLUSH, null);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -233,7 +294,11 @@ public class HackedEmailInputActivity extends AppCompatActivity {
             }
             else {
                 Log.d("Breach", "No Breaches Detected");
-                breachHeader.setText(standardHeader + "No Breaches Detected!");
+                breachHeader.setText(R.string.no_breach_header);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
+                        R.layout.hacked_list_view_layout, R.id.hackedListItem, new String[0]);
+                breachListView.setAdapter(adapter);
+                t2.speak(getString(R.string.no_breach_header), TextToSpeech.QUEUE_FLUSH, null);
             }
         }
     }

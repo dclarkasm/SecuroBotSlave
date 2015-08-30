@@ -7,9 +7,9 @@
 
     <FrameLayout
         android:id="@+id/camera_preview"
-        android:layout_width="match_parent"
-        android:layout_height="411dp"
-        android:layout_weight="0.97" />
+        android:layout_width="510dp"
+        android:layout_height="850dp"
+        android:layout_gravity="center"/>
 
     <LinearLayout
         android:orientation="horizontal"

@@ -8,6 +8,10 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -23,13 +27,18 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -52,6 +61,7 @@ public class CameraActivity extends AppCompatActivity {
     TwitterEngine te;
     FrameLayout preview;
     Dialog alertDialog;
+    Bitmap overlay;
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
@@ -60,16 +70,25 @@ public class CameraActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+        // Create an instance of Camera
+        mCamera = getCameraInstance();
+
+
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
+        mPreview = new CameraPreview(this, mCamera);
+        DrawOnTop mDraw = new DrawOnTop(this);
+        overlay = BitmapFactory.decodeResource(getResources(), R.drawable.securobot_selfie_379x344);
+        //setContentView(mPreview);
+        addContentView(mDraw, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+        //setContentView(R.layout.activity_camera);
 
         Log.d("OnCreate", "Camera activity on create called");
         t2 = new TTSEngine(this);
         te = new TwitterEngine();
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
         // Create our Preview view and set it as the content of our activity.
-        mPreview = new CameraPreview(this, mCamera);
+        //mPreview = new CameraPreview(this, mCamera);
         preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
 
@@ -102,7 +121,7 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_camera, menu);
+        //getMenuInflater().inflate(R.menu.menu_camera, menu);
         return true;
     }
 
@@ -119,6 +138,23 @@ public class CameraActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    class DrawOnTop extends View {
+        public DrawOnTop(Context context) {
+            super(context);
+
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            //Paint paint = new Paint();
+            //paint.setStyle(Paint.Style.STROKE);
+            //paint.setColor(Color.BLACK);
+            //canvas.drawText("Test Text", 10, 10, paint);
+            canvas.drawBitmap(overlay, 600, 900, null);
+            super.onDraw(canvas);
+        }
     }
 
     /** Check if this device has a camera */
@@ -167,9 +203,43 @@ public class CameraActivity extends AppCompatActivity {
 
             if(pictureData!=null && pictureFile!=null) {
                 try {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(pictureData);
-                    fos.close();
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    Bitmap finalBitmap;
+
+                    try {
+                        finalBitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options).copy(Bitmap.Config.RGB_565, true);
+
+                        int width = finalBitmap.getWidth();
+                        int height = finalBitmap.getHeight();
+
+                        // Perform matrix rotations/mirrors
+                        float[] mirrorY = { -1, 0, 0, 0, 1, 0, 0, 0, 1};
+                        Matrix matrixMirrorY = new Matrix();
+                        matrixMirrorY.setValues(mirrorY);
+
+                        Matrix matrix = new Matrix();
+                        matrix.postConcat(matrixMirrorY);
+
+                        // Create new Bitmap out of the old one
+                        Bitmap bitPicFinal = Bitmap.createBitmap(finalBitmap, 0, 0, width, height,matrix, true);
+
+                        Canvas canvas = new Canvas(bitPicFinal);
+
+                        Bitmap overlayBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.securobot_selfie_379x344);
+                        canvas.drawBitmap(overlayBitmap, 300, 600, new Paint());
+                        canvas.scale(50, 0);
+                        canvas.save();
+                        //finalBitmap is the image with the overlay on it
+                        FileOutputStream fos = new FileOutputStream(pictureFile);
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitPicFinal.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        fos.write(stream.toByteArray());
+                        fos.close();
+                    }
+                    catch(OutOfMemoryError e) {
+                        e.printStackTrace();
+                    }
+
                 } catch (FileNotFoundException e) {
                     Log.d("Picture", "File not found: " + e.getMessage());
                 } catch (IOException e) {
@@ -178,7 +248,6 @@ public class CameraActivity extends AppCompatActivity {
 
             }
 
-            //final AlertDialog.Builder alertDialog = new AlertDialog.Builder(CameraActivity.this);
             alertDialog = new Dialog(CameraActivity.this);
             LayoutInflater inflater = getLayoutInflater();
             alertDialog.setContentView(inflater.inflate(R.layout.tweet_picture_dialog_layout, null));
@@ -252,7 +321,7 @@ public class CameraActivity extends AppCompatActivity {
                     try{
                         Log.d("Twitter", "Trying to update status...");
 
-                        uploadPic(pictureFile, "Fun with UNH CFREG SecuroBot! @" +
+                        uploadPic(pictureFile, "Hanging out and learning about #cybersecurity with @" +
                                 UID[0], te.twitter);
                         runOnUiThread(new Runnable() {
                             @Override

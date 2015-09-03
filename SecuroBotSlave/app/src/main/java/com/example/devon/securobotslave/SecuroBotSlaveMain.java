@@ -2,6 +2,9 @@ package com.example.devon.securobotslave;
 
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -31,7 +34,7 @@ import ioio.lib.util.android.IOIOActivity;
 import java.lang.Math.*;
 
 
-public class SecuroBotSlaveMain extends IOIOActivity {
+public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener{
     private static final int REQUEST_ACTION_PICK = 1;
     private static final int REQUEST_WEB_PAGE = 2;
     private Handler mHandler;
@@ -40,6 +43,12 @@ public class SecuroBotSlaveMain extends IOIOActivity {
     TTSEngine t1;
     ActionEngine action;
     int currentPos = 1550;
+    LocationManager locationManager;
+    Location currentLoc;
+    String northSouth = "";
+    String eastWest = "";
+    LocationListener locationListener;
+    TwitterEngine te;
     //**********************************************
 
     @Override
@@ -49,9 +58,42 @@ public class SecuroBotSlaveMain extends IOIOActivity {
 
         t1 = new TTSEngine(this);
         action = new ActionEngine(t1);
+        te = new TwitterEngine();
         mHandler = new Handler();
 
         startRepeatingTask();
+        locationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
+
+        locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, this);
+        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this, null);
+        currentLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(currentLoc!=null) {
+            updateLocation();
+        }
+    }
+
+    @Override
+    public void onProviderEnabled(String something) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String something) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle b) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location loc) {
+        currentLoc = loc;
+        updateLocation();
+        //wheresSecuroBot.run();
     }
 //**************************************************************************************************
                                         //Threads
@@ -94,7 +136,25 @@ public class SecuroBotSlaveMain extends IOIOActivity {
             else mHandler.postDelayed(populateContent, 50);
         }
     };
-
+/*
+    Runnable wheresSecuroBot = new Runnable() {
+        @Override
+        public void run() {
+            northSouth = (currentLoc.getLatitude()>0) ? "N" : "S";
+            eastWest = (currentLoc.getLongitude()>0) ? "E" : "W";
+            Log.d("GPS", "New location: " + Math.abs(currentLoc.getLongitude()) + northSouth +
+                    ", " + Math.abs(currentLoc.getLatitude()) + eastWest);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(getApplicationContext(), "New location: " + Math.abs(currentLoc.getLongitude()) + northSouth +
+                            ", " + Math.abs(currentLoc.getLatitude()) + eastWest, Toast.LENGTH_LONG).show();
+                }
+            });
+            //mHandler.postDelayed(wheresSecuroBot, 10800000);
+        }
+    };
+*/
     @Override
     public void onPause() {
         super.onPause();
@@ -168,13 +228,26 @@ public class SecuroBotSlaveMain extends IOIOActivity {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(actionEnable) {
+            actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
             action.executeGreeting();
             Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
             startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
-            actionEnable = false;
             Log.d("Main", "Touch detected!");
         }
         return false;
+    }
+
+    public void updateLocation() {
+        //approximate location: 72.96014647W, 41.29088209N
+        northSouth = (currentLoc.getLongitude()<0) ? "N" : "S";
+        eastWest = (currentLoc.getLatitude()<0) ? "E" : "W";
+        Log.d("GPS", "Current location: " + Math.abs(currentLoc.getLatitude()) + northSouth +
+                ", " + Math.abs(currentLoc.getLongitude()) + eastWest);
+        Toast.makeText(getApplicationContext(), "Current Location: " + Math.abs(currentLoc.getLatitude()) + northSouth +
+                ", " + Math.abs(currentLoc.getLongitude()) + eastWest, Toast.LENGTH_LONG).show();
+
+        te.updateStatus("Where's SecuroBot? Current location: " + Math.abs(currentLoc.getLatitude()) + northSouth +
+                ", " + Math.abs(currentLoc.getLongitude()) + eastWest, null);
     }
 
 //**************************************************************************************************
@@ -252,6 +325,7 @@ public class SecuroBotSlaveMain extends IOIOActivity {
                     float measVal = iRSensors.input.read();
                     float measVolt = iRSensors.input.getVoltage();
                     if(iRSensors.motionDetect(measVal, measVolt)) {
+                        actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
                         led_.write(false);
                         Log.d("MOTION", "Detected motion!"
                                         + " BaseVal: " + iRSensors.baseValue + "/" + measVal +
@@ -261,7 +335,6 @@ public class SecuroBotSlaveMain extends IOIOActivity {
                         action.executeGreeting();
                         Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
                         startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
-                        actionEnable = false;
 
                         Log.d("IR SENSORS", "reinitializing...");
                         initIR();
@@ -284,6 +357,22 @@ public class SecuroBotSlaveMain extends IOIOActivity {
             double delayArr[] = new double[dArrSize];
 
             if(currentPos<newPos) { //fwd
+                while(currentPos<newPos) {
+                    currentPos++;
+                    pwm.setPulseWidth(currentPos);
+                    Thread.sleep(5);
+                }
+            }
+            else if(currentPos>newPos) { //rev
+                while(currentPos>newPos) {
+                    currentPos--;
+                    pwm.setPulseWidth(currentPos);
+                    Thread.sleep(5);
+                }
+            }
+
+            /*
+            if(currentPos<newPos) { //fwd
                 p1 = currentPos+ad;
                 p2 = newPos-ad;
                 direction = true;
@@ -305,6 +394,8 @@ public class SecuroBotSlaveMain extends IOIOActivity {
                 pwm.setPulseWidth(pos);
                 Thread.sleep(0, (int) Math.floor(delayArr[i] * peakDelay));
             }
+
+            */
             Log.d("Position", "Done");
             currentPos = newPos;
         }

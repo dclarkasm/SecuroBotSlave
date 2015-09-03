@@ -63,8 +63,6 @@
 
     </RelativeLayout>
 
-
-
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -78,6 +76,13 @@
         android:text="Cancel"
         android:id="@+id/dialogCancel"
             android:textAppearance="?android:attr/textAppearanceLarge" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:id="@+id/dialogClear"
+            android:textAppearance="?android:attr/textAppearanceLarge"  />
 
         <Button
             android:layout_width="wrap_content"

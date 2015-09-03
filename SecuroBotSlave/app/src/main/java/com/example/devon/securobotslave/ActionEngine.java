@@ -115,14 +115,33 @@ public class ActionEngine {
 
     public void executeTimelineSearch(boolean speak) {
         if(speak) {
-            int rn = r.nextInt(2-0);
+            int rn = r.nextInt(3-0);
             if(rn == 0) {
-                executeSpeech("Check out my latest status update. ");
-                twitE.speakLatestStatus();
+                if(twitE.getStatusSize()>0) {
+                    executeSpeech("Check out my latest status update. ");
+                    twitE.speakLatestStatus();
+                    return;
+                }
+                executeTimelineSearch(speak);
+            }
+            else if(rn == 1) {
+                if(twitE.getReTweetSize()>0) {
+                    executeSpeech("I just red this on twitter.");
+                    twitE.speakLatestTweet();
+                    return;
+                }
+                executeTimelineSearch(speak);
+            }
+            else if(rn == 2) {
+                if(twitE.getRandTweetSize()>0) {
+                    executeSpeech("I just saw this on twitter.");
+                    twitE.speakLatestRandTweet();
+                    return;
+                }
+                executeTimelineSearch(speak);
             }
             else {
-                executeSpeech("I just red this on twitter.");
-                twitE.speakLatestTweet();
+                executeSpeech("Sorry, I didn't see anything on Twitter");
             }
         }
     }

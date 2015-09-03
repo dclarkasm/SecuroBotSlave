@@ -36,7 +36,6 @@ public class Tweet {
     HashtagEntity hashtags [];
     private ArrayList<String> URLs = new ArrayList<String>();
 
-
     public Tweet(Status status) {
         this.status = status;
         this.tweetBy = status.getUser().getScreenName();
@@ -69,12 +68,13 @@ public class Tweet {
             for(HashtagEntity ht : hashtags) {
                 Log.d("TweetParser", ht.getText());
                 contentType = getTweetType();
-                parsedContent = removeHashtags(status);
+                parsedContent = removeHashtags(status.getText());
+                parsedContent = removeLinks(parsedContent);
             }
         }
     }
 
-    private String removeHashtags(Status withTags) {
+    private String removeHashtags(String withTags) {
         String noTags;
 
         //grab just the link if one of the below types
@@ -100,7 +100,7 @@ public class Tweet {
                 Pattern r = Pattern.compile(pattern);
 
                 try{
-                    noTags = withTags.getText().split(pattern)[1];
+                    noTags = withTags.split(pattern)[1];
                     Log.d("RegEx", "Parsed Status: " + noTags);
                 }
                 catch(Exception e) {
@@ -114,6 +114,17 @@ public class Tweet {
             }
         }
         return noTags;
+    }
+
+    private String removeLinks(String withLinks) {
+        Log.d("RemoveLinks", "Original: " + withLinks);
+        String noLinks;
+        String pattern = "http://" + ".*";
+        Pattern r = Pattern.compile(pattern);
+        noLinks = withLinks.split(pattern)[0];
+        Log.d("RemoveLinks", "W/O links: " + noLinks);
+
+        return noLinks;
     }
 
     public String getContent() {

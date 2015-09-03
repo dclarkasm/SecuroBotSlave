@@ -22,7 +22,10 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -254,6 +257,7 @@ public class CameraActivity extends AppCompatActivity {
 
             Button cancelButton = (Button) alertDialog.findViewById(R.id.dialogCancel);
             Button tweetButton = (Button) alertDialog.findViewById(R.id.dialogTweet);
+            Button clearButton = (Button) alertDialog.findViewById(R.id.dialogClear);
             ImageView pictureView = (ImageView) alertDialog.findViewById(R.id.dialogPictureView);
             final EditText usernameText = (EditText) alertDialog.findViewById(R.id.dialogUsername);
 
@@ -281,6 +285,14 @@ public class CameraActivity extends AppCompatActivity {
                 }
             });
 
+            clearButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    resetInterractionTimer();
+                    usernameText.setText("");
+                }
+            });
+
             alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
                 @Override
                 public void onCancel(DialogInterface dialog) {
@@ -290,7 +302,25 @@ public class CameraActivity extends AppCompatActivity {
                 }
             });
 
-            //alertDialog.create();
+            usernameText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    resetInterractionTimer();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
+
+
             alertDialog.show();
 
             if (pictureFile == null){
@@ -306,23 +336,31 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... UID) {
             try {
-                Log.d("Twitter", "Checking User ID...");
                 User user = null;
-
-                try{
-                    user = te.twitter.showUser(UID[0]);
+                Log.d("Twitter", "UID length: " + UID[0].length() + ", UID: " + UID[0]);
+                if(UID[0].length()>0) {
+                    Log.d("Twitter", "Checking User ID...");
+                    try{
+                        user = te.twitter.showUser(UID[0]);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
 
-
-                if(user!=null) {
+                if(user!=null || UID[0].length()==0) {
                     try{
                         Log.d("Twitter", "Trying to update status...");
 
-                        uploadPic(pictureFile, "Hanging out and learning about #cybersecurity with @" +
-                                UID[0], te.twitter);
+                        if(user!=null) {
+                            uploadPic(pictureFile, "Hanging out and learning about #cybersecurity with @" +
+                                    UID[0], te.twitter);
+                        }
+                        else {
+                            uploadPic(pictureFile, "Hanging out and learning about #cybersecurity" +
+                                    UID[0], te.twitter);
+                        }
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -335,7 +373,7 @@ public class CameraActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } else {
+                } else if(user==null && UID[0].length()>0) {
                     Log.d("Twitter", "Invalid User ID");
                     runOnUiThread(new Runnable() {
                         @Override
@@ -359,6 +397,7 @@ public class CameraActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(),
                     "Finished uploading image to twitter.", Toast.LENGTH_LONG).show();
                     */
+            exit();
             Log.d("Twitter", "Successfully updated the status.");
             super.onPostExecute(s);
         }

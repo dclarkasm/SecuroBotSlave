@@ -41,12 +41,12 @@ public class TwitterEngine {
     private ArrayList<Tweet> parsedRandTweets = new ArrayList<Tweet>(); //list of the most recent random tweets for speaking (parsed)
     private ArrayList<Tweet> parsedStatuses = new ArrayList<Tweet>(); //list of the most recent status updates for speaking (parsed)
     */
-    private Queue parsedReTweets = new LinkedList(); //list of the most recent retweets for speaking (parsed)
     private Queue parsedTips = new LinkedList();
     private Queue parsedQuizLinks = new LinkedList();
     private Queue parsedRSSLinks = new LinkedList();
     private Queue parsedJokes = new LinkedList();
     private Queue parsedArticleLinks = new LinkedList();
+    private Queue parsedReTweets = new LinkedList(); //list of the most recent retweets for speaking (parsed)
     private Queue parsedRandTweets = new LinkedList(); //list of the most recent random tweets for speaking (parsed)
     private Queue parsedStatuses = new LinkedList(); //list of the most recent status updates for speaking (parsed)
     public Twitter twitter;
@@ -225,6 +225,10 @@ public class TwitterEngine {
         engine.speak(parsedStatuses.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
     }
 
+    public void speakLatestRandTweet() {
+        engine.speak(parsedRandTweets.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
+    }
+
     public void updateStatus(String text, File file) {
         try {
             try {
@@ -306,6 +310,16 @@ public class TwitterEngine {
         }
     }
 
+    public int getReTweetSize() {
+        return parsedReTweets.size();
+    }
 
+    public int getRandTweetSize() {
+        return parsedRandTweets.size();
+    }
+
+    public int getStatusSize() {
+        return parsedStatuses.size();
+    }
 }
 

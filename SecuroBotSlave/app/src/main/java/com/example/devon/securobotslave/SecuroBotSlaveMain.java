@@ -280,7 +280,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
          */
         @Override
         protected void setup() throws ConnectionLostException, InterruptedException {
-            showVersions(ioio_, "IOIO connected!");
+            //showVersions(ioio_, "IOIO connected!");
+            log("IOIO connected!");
             led_ = ioio_.openDigitalOutput(0, true);
             iRSensors.input = ioio_.openAnalogInput(iRSensors.pin);
             initPWM();
@@ -456,7 +457,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
          */
         @Override
         public void disconnected() {
-            toast("IOIO disconnected");
+            //toast("IOIO disconnected");
+            log("IOIO disconnected");
         }
 
         /**
@@ -467,6 +469,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         @Override
         public void incompatible() {
             showVersions(ioio_, "Incompatible firmware version!");
+            log("Incompatible firmware version!");
         }
     }
 
@@ -501,5 +504,9 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show();
             }
         });
+    }
+
+    private void log(final String message) {
+        Log.d("IOIO", message);
     }
 }

@@ -228,10 +228,12 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(actionEnable) {
+
             actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
             action.executeGreeting();
             Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
             startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+
             Log.d("Main", "Touch detected!");
         }
         return false;
@@ -281,14 +283,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
             showVersions(ioio_, "IOIO connected!");
             led_ = ioio_.openDigitalOutput(0, true);
             iRSensors.input = ioio_.openAnalogInput(iRSensors.pin);
+            initPWM();
             initIR();
-
-            try {
-                pwm= ioio_.openPwmOutput(35, 100);  //new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.OPEN_DRAIN)
-                pwm.setPulseWidth(currentPos);
-            } catch (ConnectionLostException e) {
-                Log.d("Connection Lost", "IO Connection Lost");
-            }
         }
 
         /**
@@ -303,6 +299,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
          */
         @Override
         public void loop() throws ConnectionLostException, InterruptedException {
+
             int re = r.nextInt(100-0); //random number between 0 and 100 for rotation enable
             int ra = r.nextInt(3-0); //random number between 0 and 100 for rotation angle
 
@@ -319,13 +316,16 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                     {
                         moveToNewPosition();
                         initIR();
+                        Log.d("ServoMove", "Returned to Loop");
                     }
                 }
                 else{
                     float measVal = iRSensors.input.read();
                     float measVolt = iRSensors.input.getVoltage();
+                    //Log.d("Sensors", "meas Val: " + measVal + ", measVol: " + measVolt);
                     if(iRSensors.motionDetect(measVal, measVolt)) {
                         actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
+                        pwm.close();
                         led_.write(false);
                         Log.d("MOTION", "Detected motion!"
                                         + " BaseVal: " + iRSensors.baseValue + "/" + measVal +
@@ -342,34 +342,58 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                     else led_.write(true);
                 }
             } else initIR();
+
             Thread.sleep(100);
         }
 
         private void moveToNewPosition() throws ConnectionLostException, InterruptedException {
-            int ad = 100;   //acceleration distance - distance at which the acceleration take place
-            int peakDelay = 500;   //starting/ending delay (the longest delay)
-            int p1; //bottom peak 1 - acceleration end peak position
-            int p2; //bottom peak 2 - decelleration start peak position
-            boolean direction;  //reverse = false, forward = true
-            int pos = currentPos;
-            double af = 1;  //acceleration factor (multiplied by the peakDelay to get the delay for the current position)
-            int dArrSize = Math.abs(newPos-currentPos);
-            double delayArr[] = new double[dArrSize];
+            //int ad = 100;   //acceleration distance - distance at which the acceleration take place
+            //int peakDelay = 500;   //starting/ending delay (the longest delay)
+            int step = 1;
+            int stepDelay = 1;
+            //int p1; //bottom peak 1 - acceleration end peak position
+            //int p2; //bottom peak 2 - decelleration start peak position
+            //boolean direction;  //reverse = false, forward = true
+            //int pos = currentPos;
+            //double af = 1;  //acceleration factor (multiplied by the peakDelay to get the delay for the current position)
+            //int dArrSize = Math.abs(newPos-currentPos);
+            //double delayArr[] = new double[dArrSize];
 
-            if(currentPos<newPos) { //fwd
-                while(currentPos<newPos) {
-                    currentPos++;
+/*
+            Log.d("ServoMove", "Move to : " + newPos);
+            pwm.setPulseWidth(newPos);
+            Thread.sleep(1000);
+            pwm.close();
+            Thread.sleep(1000);
+            initPWM();
+            currentPos = newPos;
+            Log.d("ServoMove", "Finished Moving");
+*/
+
+
+
+            if(currentPos<=newPos) { //fwd
+                while(currentPos<=newPos) {
+                    currentPos+=step;
                     pwm.setPulseWidth(currentPos);
-                    Thread.sleep(5);
+                    Thread.sleep(stepDelay);
+                    //Log.d("ServoMove", "" + currentPos);
                 }
+                return;
             }
             else if(currentPos>newPos) { //rev
                 while(currentPos>newPos) {
-                    currentPos--;
+                    currentPos-=step;
                     pwm.setPulseWidth(currentPos);
-                    Thread.sleep(5);
+                    Thread.sleep(stepDelay);
+                    //Log.d("ServoMove", "" + currentPos);
                 }
+                return;
             }
+
+            pwm.close();
+            Thread.sleep(1000);
+            initPWM();
 
             /*
             if(currentPos<newPos) { //fwd
@@ -394,20 +418,32 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 pwm.setPulseWidth(pos);
                 Thread.sleep(0, (int) Math.floor(delayArr[i] * peakDelay));
             }
-
             */
             Log.d("Position", "Done");
             currentPos = newPos;
         }
 
+        public boolean initPWM() throws InterruptedException{
+            try {
+                pwm= ioio_.openPwmOutput(new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.NORMAL), 100);  //new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.OPEN_DRAIN)
+                pwm.setPulseWidth(currentPos);
+                Thread.sleep(1000);
+                return true;
+            } catch (ConnectionLostException e) {
+                Log.d("Connection Lost", "IO Connection Lost");
+            }
+            return false;
+        }
+
         public void initIR() throws ConnectionLostException, InterruptedException {
-            float baseVal=0f, baseVolt=0f;
+            float baseVal=0, baseVolt=0;
 
             for(int i=0; i<iRSensors.iSamples; i++) {
                 baseVal += iRSensors.input.read();
                 baseVolt += iRSensors.input.getVoltage();
             }
             iRSensors.initialize(baseVal / iRSensors.iSamples, baseVolt / iRSensors.iSamples);
+            Thread.sleep(500);
 /*
             Log.d("INIT IR", "Base Val: " + baseVal/iRSensors.iSamples +
                     ", base Volt: " + baseVolt/iRSensors.iSamples);*/

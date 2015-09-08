@@ -32,24 +32,45 @@
 
         <ImageView
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="500dp"
             android:id="@+id/imageView"
             android:src="@drawable/cfreg_logo"
             android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/textView"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_alignParentTop="true"
             android:text="Tagliatela College of Engineering"
             android:textSize="40dp"
             android:id="@+id/textView"
             android:textColor="#5AB745"
             android:textStyle="bold"
             android:gravity="center"
-            android:layout_above="@+id/imageView"
             android:layout_centerHorizontal="true" />
+
+        <ImageButton
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:id="@+id/btnSpeak"
+            android:src="@drawable/mic_icon"
+            android:background="#000000"
+            android:layout_above="@+id/textView7"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:gravity="center"
+            android:text="Click the logo to start a new activity or click the mic to speak"
+            android:id="@+id/textView7"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+
 
     </RelativeLayout>
 

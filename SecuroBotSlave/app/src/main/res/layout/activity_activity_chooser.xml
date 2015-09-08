@@ -4,7 +4,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    android:background="#000000"
+    android:background="#000066"
     tools:context="com.example.devon.securobotslave.ActivityChooser">
 
     <FrameLayout
@@ -19,11 +19,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Show me an article!"
             android:id="@+id/articleButton"
             android:layout_gravity="left|top"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/article_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="articleAction"/>
@@ -42,11 +41,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Tell me a joke!"
             android:id="@+id/jokeButton"
             android:layout_gravity="right|top"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/joke_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="jokeAction" />
@@ -54,11 +52,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Show me an\nRSS feed!"
             android:id="@+id/rssButton"
             android:layout_gravity="left|bottom"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/rss_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="rssAction" />
@@ -66,11 +63,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Give me a tip!"
             android:id="@+id/tipButton"
             android:layout_gravity="center_horizontal|bottom"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/tip_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="tipAction" />
@@ -78,11 +74,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Do something random!"
             android:id="@+id/randomButton"
             android:layout_gravity="right|bottom"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/random_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="randomAction" />
@@ -90,11 +85,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Tweet a picture of me!"
             android:id="@+id/pictureButton"
             android:layout_gravity="left|center_vertical"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/picture_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="pictureAction" />
@@ -102,11 +96,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="have i been hacked?"
             android:id="@+id/hackedButton"
             android:layout_gravity="right|center_vertical"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/hacked_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="hackedAction"/>
@@ -114,11 +107,10 @@
         <Button
             android:layout_width="150dp"
             android:layout_height="200dp"
-            android:text="Read me a tweet!"
             android:id="@+id/button"
             android:layout_gravity="center"
             android:textColor="#000000"
-            android:background="#5AB745"
+            android:background="@drawable/tweet_button"
             android:alpha="0.5"
             android:textSize="25dp"
             android:onClick="tweetAction" />

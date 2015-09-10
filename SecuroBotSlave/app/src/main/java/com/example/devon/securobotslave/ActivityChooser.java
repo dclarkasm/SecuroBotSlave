@@ -28,6 +28,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import ioio.lib.api.DigitalOutput;
 import ioio.lib.api.IOIO;
@@ -70,11 +71,17 @@ public class ActivityChooser extends Activity {
             public void onClick(View v) {
                 if(actionEnable) {
                     actionEnable = false;
+                    mHandler.removeCallbacks(choiceTimer);
+                    mHandler.removeCallbacks(timerInterrupt);
+                    choiceTimer.run();
                     promptSpeechInput();
                 }
                 else {
                     t1.t1.stop();
                     spkButton.setImageResource(R.drawable.mic_icon);
+                    mHandler.removeCallbacks(choiceTimer);
+                    mHandler.removeCallbacks(timerInterrupt);
+                    choiceTimer.run();
                     actionEnable = true;
                 }
             }
@@ -147,12 +154,16 @@ public class ActivityChooser extends Activity {
             else {
                 mHandler.postDelayed(manageMicBtn, 100);
             }
+            mHandler.removeCallbacks(choiceTimer);
+            mHandler.removeCallbacks(timerInterrupt);
+            choiceTimer.run();
         }
     };
 
     private void stopRunnable() {
         mHandler.removeCallbacks(choiceTimer);
         mHandler.removeCallbacks(timerInterrupt);
+        mHandler.removeCallbacks(manageMicBtn);
         finish();
     }
 
@@ -197,7 +208,7 @@ public class ActivityChooser extends Activity {
     }
 
     public void hackedAction(View v) {
-        if(actionEnable) {
+        if (actionEnable) {
             data.putExtra("action", ActionEngine.ACTION_HACKED);
             Intent hackedIntent = new Intent(ActivityChooser.this, HackedEmailInputActivity.class);
             startActivityForResult(hackedIntent, REQUEST_HACKED_EMAIL);
@@ -245,6 +256,9 @@ public class ActivityChooser extends Activity {
 
                     String urlString = baseAPIURL + makeString4GET(result.get(0));
                     new HIBPAPICall().execute(urlString);
+                }
+                else {
+                    actionEnable = true;
                 }
                 break;
             }
@@ -304,15 +318,33 @@ public class ActivityChooser extends Activity {
         protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
             //spkButton.setImageResource(R.drawable.stop_audio);
+
+            final String parsedResult = parseResult(result);
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    t1.speak(result, TextToSpeech.QUEUE_FLUSH, null);
+                    t1.speak(parsedResult, TextToSpeech.QUEUE_FLUSH, null);
                 }
             }, 1000); //adding one sec delay before talking to make sure UI changes stick
             manageMicBtn.run();
         }
+    }
+
+    public String parseResult(String original) {
+        String parsed;
+
+        //shorten the parsed text to only one sentence
+        Log.d("ShortenResult", "Original: " + original);
+        String pattern = "[.]";
+        Pattern r = Pattern.compile(pattern);
+        parsed = original.split(pattern)[0];
+
+        //find an replace the word "Jeannie" with "Ada"
+        parsed = parsed.replace("Jeannie", "Ada");
+        Log.d("ShortenResult", "Parsed: " + parsed);
+
+        return parsed;
     }
 
     // convert InputStream to String

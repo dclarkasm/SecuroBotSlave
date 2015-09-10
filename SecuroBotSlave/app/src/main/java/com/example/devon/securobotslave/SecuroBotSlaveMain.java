@@ -310,6 +310,9 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                     String urlString = baseAPIURL + makeString4GET(result.get(0));
                     new HIBPAPICall().execute(urlString);
                 }
+                else {
+                    actionEnable = true;
+                }
                 break;
             }
         }

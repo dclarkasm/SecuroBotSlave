@@ -49,6 +49,7 @@ public class TwitterEngine {
     private Queue parsedReTweets = new LinkedList(); //list of the most recent retweets for speaking (parsed)
     private Queue parsedRandTweets = new LinkedList(); //list of the most recent random tweets for speaking (parsed)
     private Queue parsedStatuses = new LinkedList(); //list of the most recent status updates for speaking (parsed)
+    private String latestStatus;
     public Twitter twitter;
     private static final String TWITTER_KEY = "JlxXwwVxSH8KuiqIktrNE2VQp";
     private static final String TWITTER_SECRET = "4m1kuoWKOrHDLX7CulAs6uAzEKpjFUWUkweWFunQCXlZCVpGXm";
@@ -95,41 +96,45 @@ public class TwitterEngine {
                 for (twitter4j.Status status : statuses) {
                     Log.d("Twitter", "@" + status.getUser().getScreenName() + " - " + status.getText());
                     Tweet newTweet = new Tweet(status);
-                    parsedStatuses.add(newTweet.getContent());
-                    switch(newTweet.getContentType()) {
-                        case Tweet.SECUROBOT_ARTICLE:
-                            if(!parsedArticleLinks.contains(newTweet.getContent())) {
-                                parsedArticleLinks.add(newTweet.getContent());
-                            }
-                            break;
-                        case Tweet.SECUROBOT_JOKE:
-                            if(!parsedJokes.contains(newTweet.getContent())){
-                                parsedJokes.add(newTweet.getContent());
-                            }
-                            break;
-                        case Tweet.SECUROBOT_QUIZ:
-                            if(!parsedQuizLinks.contains(newTweet.getContent())) {
-                                parsedQuizLinks.add(newTweet.getContent());
-                            }
-                            break;
-                        case Tweet.SECUROBOT_RSSFEED:
-                            if(!parsedRSSLinks.contains(newTweet.getContent())) {
-                                parsedRSSLinks.add(newTweet.getContent());
-                            }
-                            break;
-                        case Tweet.SECUROBOT_TIP:
-                            if(!parsedTips.contains(newTweet.getContent())) {
-                                parsedTips.add(newTweet.getContent());
-                            }
-                            break;
-                        case Tweet.SECUROBOT_RT:
-                            if(!parsedReTweets.contains(newTweet.getTweetBy() + " says " + newTweet.getContent())) {
-                                parsedReTweets.add(newTweet.getTweetBy() + " says " + newTweet.getContent());
-                            }
-                            break;
-                        default: break;
+                    String tweetContent = newTweet.getContent();
+                    if(tweetContent!=null) {
+                        parsedStatuses.add(tweetContent);
+                        Log.d("Statuses", "newTweetAdded: " + tweetContent);
+                        switch(newTweet.getContentType()) {
+                            case Tweet.SECUROBOT_ARTICLE:
+                                if(!parsedArticleLinks.contains(tweetContent)) {
+                                    parsedArticleLinks.add(tweetContent);
+                                }
+                                break;
+                            case Tweet.SECUROBOT_JOKE:
+                                if(!parsedJokes.contains(tweetContent)){
+                                    parsedJokes.add(tweetContent);
+                                }
+                                break;
+                            case Tweet.SECUROBOT_QUIZ:
+                                if(!parsedQuizLinks.contains(tweetContent)) {
+                                    parsedQuizLinks.add(tweetContent);
+                                }
+                                break;
+                            case Tweet.SECUROBOT_RSSFEED:
+                                if(!parsedRSSLinks.contains(tweetContent)) {
+                                    parsedRSSLinks.add(tweetContent);
+                                }
+                                break;
+                            case Tweet.SECUROBOT_TIP:
+                                if(!parsedTips.contains(tweetContent)) {
+                                    parsedTips.add(tweetContent);
+                                }
+                                break;
+                            case Tweet.SECUROBOT_RT:
+                                if(!parsedReTweets.contains(newTweet.getTweetBy() + " says " + tweetContent)) {
+                                    parsedReTweets.add(newTweet.getTweetBy() + " says " + tweetContent);
+                                }
+                                break;
+                            default: break;
+                        }
+                        contentFetched = true;
                     }
-                    contentFetched = true;
                 }
             } catch (TwitterException te) {
                 te.printStackTrace();
@@ -222,7 +227,12 @@ public class TwitterEngine {
     }
 
     public void speakLatestStatus() {
+        //engine.speak(parsedStatuses.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
         engine.speak(parsedStatuses.element().toString(), TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    public String getLatestStatus() {
+        return latestStatus;
     }
 
     public void speakLatestRandTweet() {

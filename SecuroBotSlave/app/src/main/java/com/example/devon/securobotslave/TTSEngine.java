@@ -1,6 +1,8 @@
 package com.example.devon.securobotslave;
 
 import android.content.Context;
+import android.media.AudioManager;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
@@ -12,6 +14,7 @@ import java.util.Locale;
  */
 public class TTSEngine implements TextToSpeech.OnInitListener{
     public TextToSpeech t1;
+    public boolean isSpeaking = false;
 
     public TTSEngine(Context c) {
         t1 = new TextToSpeech(c, this);
@@ -34,6 +37,17 @@ public class TTSEngine implements TextToSpeech.OnInitListener{
         if (status == TextToSpeech.SUCCESS) {
             Log.d("TTS", "Success!");
             t1.setLanguage(Locale.US);
+
+            t1.setOnUtteranceCompletedListener(new TextToSpeech.OnUtteranceCompletedListener() {
+                @Override
+                public void onUtteranceCompleted(String utteranceId) {
+                    Log.i("Finished Speaking", utteranceId);
+                    if(utteranceId.equals("AIFinished")) {
+                        isSpeaking = false;
+                    }
+                }
+            });
+
         }
     }
 
@@ -41,8 +55,10 @@ public class TTSEngine implements TextToSpeech.OnInitListener{
         while(t1.isSpeaking()); //wait until we finish speaking before saying something else
         if(!t1.isSpeaking()){
             //TODO: Add a one shot timer here to wait for a few ms for the TTS engine to begin speaking
+            params = new HashMap<String, String>();
+            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,"AIFinished");
             t1.speak(string, queueMode, params);
-            while(t1.isSpeaking()); //wait until we finish speaking before saying something else
+            isSpeaking = true;
         }
     }
 }

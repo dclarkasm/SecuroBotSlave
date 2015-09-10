@@ -9,11 +9,10 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="700dp"
         android:id="@+id/chooserLayout"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentTop="true">
 
         <Button
@@ -115,5 +114,43 @@
             android:textSize="25dp"
             android:onClick="tweetAction" />
     </FrameLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/chooserLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center">
+
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent">
+
+            <ImageButton
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:id="@+id/btnSpeak"
+                android:src="@drawable/mic_icon"
+                android:background="#000066"
+                android:layout_above="@+id/textView7"
+                android:layout_gravity="center_horizontal"/>
+
+            <TextView
+                android:layout_width="400dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:gravity="center"
+                android:text="Click the mic to speak"
+                android:id="@+id/textView7"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true" />
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>

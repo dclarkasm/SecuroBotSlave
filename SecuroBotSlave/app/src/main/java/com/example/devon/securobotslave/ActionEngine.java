@@ -119,6 +119,8 @@ public class ActionEngine {
             if(rn == 0) {
                 if(twitE.getStatusSize()>0) {
                     executeSpeech("Check out my latest status update. ");
+                    Log.d("Twitter", "Status size: " + twitE.getStatusSize());
+                    Log.d("Twitter", "Status: " + twitE.getLatestStatus());
                     twitE.speakLatestStatus();
                     return;
                 }

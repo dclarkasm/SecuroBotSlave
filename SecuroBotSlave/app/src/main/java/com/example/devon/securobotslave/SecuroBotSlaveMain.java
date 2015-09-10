@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,6 +38,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
@@ -53,6 +55,7 @@ import ioio.lib.util.BaseIOIOLooper;
 import ioio.lib.util.IOIOLooper;
 import ioio.lib.util.android.IOIOActivity;
 import java.lang.Math.*;
+import java.util.regex.Pattern;
 
 
 public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener{
@@ -109,7 +112,15 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         spkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                promptSpeechInput();
+                if(actionEnable) {
+                    actionEnable = false;
+                    promptSpeechInput();
+                }
+                else {
+                    t1.t1.stop();
+                    spkButton.setImageResource(R.drawable.mic_icon);
+                    actionEnable = true;
+                }
             }
         });
 
@@ -188,6 +199,38 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 mHandler.postDelayed(populateContent, 1000);
             }
             else mHandler.postDelayed(populateContent, 50);
+        }
+    };
+
+    boolean wasSpeaking = false;
+    Runnable manageMicBtn = new Runnable() {
+        @Override
+        public void run() {
+            if(t1.isSpeaking && !wasSpeaking) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        spkButton.setImageResource(R.drawable.stop_audio);
+                        actionEnable = false;
+                        wasSpeaking = true;
+                    }
+                });
+                mHandler.postDelayed(manageMicBtn, 100);
+            }
+            else if(!t1.isSpeaking && wasSpeaking){
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        spkButton.setImageResource(R.drawable.mic_icon);
+                        actionEnable = true;
+                        wasSpeaking = false;
+                    }
+                });
+                mHandler.removeCallbacks(manageMicBtn);
+            }
+            else {
+                mHandler.postDelayed(manageMicBtn, 100);
+            }
         }
     };
 
@@ -271,21 +314,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
             }
         }
     }
-/*
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if(actionEnable) {
 
-            actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
-            action.executeGreeting();
-            Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
-            startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
-
-            Log.d("Main", "Touch detected!");
-        }
-        return false;
-    }
-*/
     public void updateLocation() {
         //approximate location of UNH Buckman Hall: 72.96014647W, 41.29088209N
         northSouth = (currentLoc.getLongitude()<0) ? "N" : "S";
@@ -349,52 +378,35 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         }
 
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
-            t1.speak(result, TextToSpeech.QUEUE_FLUSH, null);
+            final String parsedResult = parseResult(result);
 
-            /*
-            if(result.length()>0) {
-                try {
-                    JSONArray array = new JSONArray(result);
-
-                    breaches = new ArrayList<Breach>();
-                    breachNameArray = new String[array.length()];
-                    for (int i=0; i<array.length(); i++){
-                        breaches.add(new Breach(array.getJSONObject(i)));
-                        breachNameArray[i] = breaches.get(i).getName();
-                    }
-
-                    String speakBreaches = "";
-                    for(int i=0; i<breaches.size(); i++) {
-                        breaches.get(i).printBreach();
-
-                        if(i==(breaches.size()-2)) speakBreaches += breaches.get(i).getName() + ", and ";
-                        else if(i==(breaches.size()-1)) speakBreaches += breaches.get(i).getName();
-                        else speakBreaches += breaches.get(i).getName() + ", ";
-                    }
-
-                    breachHeader.setText(R.string.standard_breach_header);
-                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
-                            R.layout.hacked_list_view_layout, R.id.hackedListItem, breachNameArray);
-                    breachListView.setAdapter(adapter);
-                    t2.speak("Your email account has been breached through association with " +
-                            speakBreaches, TextToSpeech.QUEUE_FLUSH, null);
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    t1.speak(parsedResult, TextToSpeech.QUEUE_FLUSH, null);
                 }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            else {
-                Log.d("Breach", "No Breaches Detected");
-                breachHeader.setText(R.string.no_breach_header);
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),
-                        R.layout.hacked_list_view_layout, R.id.hackedListItem, new String[0]);
-                breachListView.setAdapter(adapter);
-                t2.speak(getString(R.string.no_breach_header), TextToSpeech.QUEUE_FLUSH, null);
-            }
-            */
+            }, 1000); //adding one sec delay before talking to make sure UI changes stick
+            manageMicBtn.run();
         }
+    }
+
+    public String parseResult(String original) {
+        String parsed;
+
+        //shorten the parsed text to only one sentence
+        Log.d("ShortenResult", "Original: " + original);
+        String pattern = "[.]";
+        Pattern r = Pattern.compile(pattern);
+        parsed = original.split(pattern)[0];
+
+        //find an replace the word "Jeannie" with "Ada"
+        parsed = parsed.replace("Jeannie", "Ada");
+        Log.d("ShortenResult", "Parsed: " + parsed);
+
+        return parsed;
     }
 
     // convert InputStream to String
@@ -476,7 +488,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         @Override
         public void loop() throws ConnectionLostException, InterruptedException {
 
-            int re = r.nextInt(100-0); //random number between 0 and 100 for rotation enable
+            int re = r.nextInt(100 - 0); //random number between 0 and 100 for rotation enable
             int ra = r.nextInt(3-0); //random number between 0 and 100 for rotation angle
 
             if(actionEnable){
@@ -525,78 +537,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         }
 
         private void moveToNewPosition() throws ConnectionLostException, InterruptedException {
-            //int ad = 100;   //acceleration distance - distance at which the acceleration take place
-            //int peakDelay = 500;   //starting/ending delay (the longest delay)
-            //int step = 1;
-            //int stepDelay = 1;
-            //int p1; //bottom peak 1 - acceleration end peak position
-            //int p2; //bottom peak 2 - decelleration start peak position
-            //boolean direction;  //reverse = false, forward = true
-            //int pos = currentPos;
-            //double af = 1;  //acceleration factor (multiplied by the peakDelay to get the delay for the current position)
-            //int dArrSize = Math.abs(newPos-currentPos);
-            //double delayArr[] = new double[dArrSize];
-
-/*
-            Log.d("ServoMove", "Move to : " + newPos);
-            pwm.setPulseWidth(newPos);
-            Thread.sleep(1000);
-            pwm.close();
-            Thread.sleep(1000);
-            initPWM();
-            currentPos = newPos;
-            Log.d("ServoMove", "Finished Moving");
-*/
 
 
-/*
-            if(currentPos<=newPos) { //fwd
-                while(currentPos<=newPos) {
-                    currentPos+=step;
-                    pwm.setPulseWidth(currentPos);
-                    Thread.sleep(stepDelay);
-                    //Log.d("ServoMove", "" + currentPos);
-                }
-                return;
-            }
-            else if(currentPos>newPos) { //rev
-                while(currentPos>newPos) {
-                    currentPos-=step;
-                    pwm.setPulseWidth(currentPos);
-                    Thread.sleep(stepDelay);
-                    //Log.d("ServoMove", "" + currentPos);
-                }
-                return;
-            }
-
-            pwm.close();
-            Thread.sleep(1000);
-            initPWM();
-*/
-            /*
-            if(currentPos<newPos) { //fwd
-                p1 = currentPos+ad;
-                p2 = newPos-ad;
-                direction = true;
-            }
-            else {  //rev
-                p1 = newPos+ad;
-                p2 = currentPos-ad;
-                direction = false;
-            }
-
-            for(int i=0, p; i<dArrSize; i++) {
-                p = (direction) ? pos+1 : pos-1;
-                delayArr[i] = (p<=p1) ? -Math.exp(-Math.pow((p-p1),2)/6000) + 1.2 :
-                        (p2<=p) ? -Math.exp(-Math.pow((p-p2),2)/6000) + 1.2 : af;
-            }
-
-            for(int i=0; pos!=newPos; i+=1) {
-                pos = (direction) ? pos+1 : pos-1;  //if forward increase, reverse decrease
-                pwm.setPulseWidth(pos);
-                Thread.sleep(0, (int) Math.floor(delayArr[i] * peakDelay));
-            }
-            */
             OutputStream out = uart.getOutputStream();
             try {
                 out.write(newPos);
@@ -605,26 +547,34 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
             catch(Exception e) {
                 e.printStackTrace();
             }
-            Thread.sleep(1500);
+            Thread.sleep(2000);
+
+            /*
+            int result = 0;
+            InputStream in = null;
+            while(result!=1) {
+                while(in == null) {
+                    in = uart.getInputStream();
+                }
+                try{
+                    result = in.read();
+                    Log.d("Serial", "Recieved result: " + result);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            */
 
             Log.d("Serial", "Done");
             currentPos = newPos;
+
         }
 
         public boolean initSerial() throws InterruptedException, ConnectionLostException{
-            /*
-            try {
-                pwm= ioio_.openPwmOutput(new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.NORMAL), 100);  //new DigitalOutput.Spec(35, DigitalOutput.Spec.Mode.OPEN_DRAIN)
-                pwm.setPulseWidth(currentPos);
-                Thread.sleep(1000);
-                return true;
-            } catch (ConnectionLostException e) {
-                Log.d("Connection Lost", "IO Connection Lost");
-            }
-            return false;
-            */
-            Thread.sleep(2000);
-            uart = ioio_.openUart(34, 35, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE);
+
+            uart = ioio_.openUart(36, 35, 9600, Uart.Parity.EVEN, Uart.StopBits.ONE);
+
             return false;
         }
 
@@ -651,6 +601,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         public void disconnected() {
             //toast("IOIO disconnected");
             log("IOIO disconnected");
+
             uart.close();
         }
 

@@ -71,22 +71,22 @@
         android:gravity="center">
 
         <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
         android:text="Cancel"
         android:id="@+id/dialogCancel"
             android:textAppearance="?android:attr/textAppearanceLarge" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Clear"
             android:id="@+id/dialogClear"
             android:textAppearance="?android:attr/textAppearanceLarge"  />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Tweet!"
             android:id="@+id/dialogTweet"
             android:textAppearance="?android:attr/textAppearanceLarge" />

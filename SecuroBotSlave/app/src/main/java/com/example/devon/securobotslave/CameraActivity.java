@@ -117,6 +117,13 @@ public class CameraActivity extends AppCompatActivity {
             }
         });
 
+        mPreview.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCamera.takePicture(null, null, null, mPicture);
+            }
+        });
+
         interactionTimer.run();
         waitForTTS.run();
     }
@@ -151,10 +158,6 @@ public class CameraActivity extends AppCompatActivity {
 
         @Override
         protected void onDraw(Canvas canvas) {
-            //Paint paint = new Paint();
-            //paint.setStyle(Paint.Style.STROKE);
-            //paint.setColor(Color.BLACK);
-            //canvas.drawText("Test Text", 10, 10, paint);
             canvas.drawBitmap(overlay, 600, 900, null);
             super.onDraw(canvas);
         }
@@ -318,8 +321,6 @@ public class CameraActivity extends AppCompatActivity {
 
                 }
             });
-
-
 
             alertDialog.show();
 

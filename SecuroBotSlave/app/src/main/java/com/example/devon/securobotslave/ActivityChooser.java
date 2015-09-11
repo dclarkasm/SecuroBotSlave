@@ -1,8 +1,10 @@
 package com.example.devon.securobotslave;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -11,11 +13,16 @@ import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.BufferedInputStream;
@@ -46,6 +53,7 @@ public class ActivityChooser extends Activity {
     Handler mHandler;
     ImageButton spkButton;
     TTSEngine t1;
+    Dialog alertDialog;
     boolean actionEnable = true;
     private final int REQ_CODE_SPEECH_INPUT = 100;
     private final static String baseAPIURL = "https://siris.p.mashape.com/api" +
@@ -62,7 +70,6 @@ public class ActivityChooser extends Activity {
         mHandler = new Handler();
         t1 = new TTSEngine(this);
         choiceTimer.run();
-
 
         spkButton = (ImageButton) findViewById(R.id.btnSpeak);
 
@@ -157,6 +164,23 @@ public class ActivityChooser extends Activity {
             mHandler.removeCallbacks(choiceTimer);
             mHandler.removeCallbacks(timerInterrupt);
             choiceTimer.run();
+        }
+    };
+
+    Runnable manageActivities = new Runnable() {
+        @Override
+        public void run() {
+            if(t1.isSpeaking && !wasSpeaking) {
+                actionEnable = false;
+            }
+            else if(!t1.isSpeaking && wasSpeaking) {
+                stopRunnable();
+            }
+            else {
+                mHandler.removeCallbacks(choiceTimer);
+                mHandler.removeCallbacks(timerInterrupt);
+                choiceTimer.run();
+            }
         }
     };
 
@@ -317,35 +341,139 @@ public class ActivityChooser extends Activity {
         @Override
         protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
-            //spkButton.setImageResource(R.drawable.stop_audio);
+            parseResult(result);
 
-            final String parsedResult = parseResult(result);
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    t1.speak(parsedResult, TextToSpeech.QUEUE_FLUSH, null);
-                }
-            }, 1000); //adding one sec delay before talking to make sure UI changes stick
             manageMicBtn.run();
         }
     }
 
     public String parseResult(String original) {
         String parsed;
+        String spoken;
+        int origLen = original.length();
+        int max = 200;  //max length of the string
+        int expandedMax = 3000;
+        Log.d("AI", "Original: " + original);
+        Handler handler = new Handler();
+        final String finalOrig;
 
-        //shorten the parsed text to only one sentence
-        Log.d("ShortenResult", "Original: " + original);
-        String pattern = "[.]";
-        Pattern r = Pattern.compile(pattern);
-        parsed = original.split(pattern)[0];
+        //find and replace the word "Jeannie" with "Ada"
+        original = original.replace("Jeannie", "Ada");
 
-        //find an replace the word "Jeannie" with "Ada"
-        parsed = parsed.replace("Jeannie", "Ada");
-        Log.d("ShortenResult", "Parsed: " + parsed);
+        if(origLen <= 0) {
+            parsed = "Sorry, I didn't quite understand that.";
+            spoken = parsed;
+        }
+        else if(origLen > 0 && origLen <= max) {
+            parsed = original;
+            spoken = parsed;
+        }
+        else {  //origLen > max
+            spoken = "Here is what I found about that topic.";
+            finalOrig = original;
+            Log.d("AI", "Long String Length: " + origLen);
+            parsed = original.substring(0, max);
 
+            actionEnable = false;
+
+            alertDialog = new Dialog(ActivityChooser.this);
+            LayoutInflater inflater = getLayoutInflater();
+            alertDialog.setContentView(inflater.inflate(R.layout.siri_dialog_layout, null));
+
+            Button backButton = (Button) alertDialog.findViewById(R.id.backButton);
+            Button readMoreButton = (Button) alertDialog.findViewById(R.id.readMore);
+            final TextView siriTextView = (TextView) alertDialog.findViewById(R.id.siriText);
+            ScrollView scrollView = (ScrollView) alertDialog.findViewById(R.id.scrollView);
+
+            siriTextView.setText(parsed + "...");   //first set the text to first max-0 characters
+
+            backButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AITimerInterrupt.run();
+                }
+            });
+
+            readMoreButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    resetAIInterractionTimer();
+
+                    siriTextView.setText(finalOrig);
+                }
+            });
+
+            siriTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    resetAIInterractionTimer();
+                }
+            });
+
+            alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    AITimerInterrupt.run();
+                }
+            });
+
+            scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+
+                @Override
+                public void onScrollChanged() {
+                    resetAIInterractionTimer();
+                }
+            });
+
+            alertDialog.show();
+            AIInteractionTimer.run();
+        }
+
+        final String finalParse;
+        if(origLen<=max) {
+            finalParse = parsed;
+        }
+        else {
+            finalParse = spoken;
+        }
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                t1.speak(finalParse, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        }, 1000); //adding one sec delay before talking to make sure UI changes stick
+
+        Log.d("AI", "Parsed: " + parsed);
         return parsed;
     }
+
+    private void resetAIInterractionTimer() {
+        mHandler.removeCallbacks(AIInteractionTimer);
+        mHandler.removeCallbacks(AITimerInterrupt);
+        AIInteractionTimer.run();
+        Log.d("AI", "Touch detected!");
+    }
+
+    //A timer that expires if the user does not interact with screen after X time
+    Runnable AIInteractionTimer = new Runnable(){
+        @Override
+        public void run() {
+            Log.d("AI", "Delay Started...");
+            mHandler.postDelayed(AITimerInterrupt, 30000);
+        }
+    };
+
+    //this is called by the interaction timer when time has expired, as long as it hasnt been pulled
+    //from the handler
+    Runnable AITimerInterrupt = new Runnable() {
+        @Override
+        public void run() {
+            mHandler.removeCallbacks(AIInteractionTimer);
+            Log.d("AI", "Delay Stopped.");
+            alertDialog.dismiss();
+            actionEnable = true;
+        }
+    };
 
     // convert InputStream to String
     private static String getStringFromInputStream(InputStream is) {

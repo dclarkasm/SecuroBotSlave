@@ -1,11 +1,12 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" 
-    tools:context="com.example.devon.securobotslave.WebPageActivity">
+    tools:context="com.example.devon.securobotslave.WebPageActivity"
+    android:background="@color/blue">
 
     <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="182dp"
+        android:layout_height="85dp"
         android:text="&lt;- Back"
         android:id="@+id/backButton"
         android:layout_alignParentBottom="true"
@@ -16,7 +17,6 @@
         android:id="@+id/webview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/backButton"
-        />
+        android:layout_above="@+id/backButton" />
 
 </RelativeLayout>

@@ -23,7 +23,7 @@
             android:textSize="40dp"
             android:text="Cyber Forensics Research and Education Group"
             android:id="@+id/textView2"
-            android:textColor="#5AB745"
+            android:textColor="@color/green"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_below="@+id/imageView"
@@ -47,7 +47,7 @@
             android:text="Tagliatela College of Engineering"
             android:textSize="40dp"
             android:id="@+id/textView"
-            android:textColor="#5AB745"
+            android:textColor="@color/green"
             android:textStyle="bold"
             android:gravity="center"
             android:layout_centerHorizontal="true" />

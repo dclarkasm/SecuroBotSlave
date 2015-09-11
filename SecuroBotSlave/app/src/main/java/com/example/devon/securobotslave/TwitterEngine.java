@@ -91,7 +91,7 @@ public class TwitterEngine {
         protected String doInBackground(String... params) {
             try {
                 User user = twitter.verifyCredentials();
-                List<twitter4j.Status> statuses = twitter.getHomeTimeline();
+                List<twitter4j.Status> statuses = twitter.getUserTimeline();
                 Log.d("Twitter", "Showing @" + user.getScreenName() + "'s home timeline.");
                 for (twitter4j.Status status : statuses) {
                     Log.d("Twitter", "@" + status.getUser().getScreenName() + " - " + status.getText());
@@ -99,7 +99,7 @@ public class TwitterEngine {
                     String tweetContent = newTweet.getContent();
                     if(tweetContent!=null) {
                         parsedStatuses.add(tweetContent);
-                        Log.d("Statuses", "newTweetAdded: " + tweetContent);
+                        Log.d("Twitter", "newTweetAdded: " + tweetContent);
                         switch(newTweet.getContentType()) {
                             case Tweet.SECUROBOT_ARTICLE:
                                 if(!parsedArticleLinks.contains(tweetContent)) {

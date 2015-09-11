@@ -1,30 +1,40 @@
 package com.example.devon.securobotslave;
 
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -75,6 +85,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     ImageView logo;
     //LocationListener locationListener;
     TwitterEngine te;
+    Dialog alertDialog;
     private final int REQ_CODE_SPEECH_INPUT = 100;
     private final static String baseAPIURL = "https://siris.p.mashape.com/api" +
             "?clientFeatures=all" +
@@ -332,11 +343,11 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     }
 
     public String makeString4GET(String request) {
-        Log.d("StringConv", "Original: " + request);
+        Log.d("AI", "Original: " + request);
         request = request.toLowerCase();
-        Log.d("StringConv", "to Lower: " + request);
+        Log.d("AI", "to Lower: " + request);
         request = request.replaceAll(" ", "+");
-        Log.d("StringConv", "replace white: " + request);
+        Log.d("AI", "replace white: " + request);
 
         return request;
     }
@@ -383,34 +394,139 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         @Override
         protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
-            final String parsedResult = parseResult(result);
+            parseResult(result);
 
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    t1.speak(parsedResult, TextToSpeech.QUEUE_FLUSH, null);
-                }
-            }, 1000); //adding one sec delay before talking to make sure UI changes stick
             manageMicBtn.run();
         }
     }
 
     public String parseResult(String original) {
         String parsed;
+        String spoken;
+        int origLen = original.length();
+        int max = 200;  //max length of the string
+        int expandedMax = 3000;
+        Log.d("AI", "Original: " + original);
+        Handler handler = new Handler();
+        final String finalOrig;
 
-        //shorten the parsed text to only one sentence
-        Log.d("ShortenResult", "Original: " + original);
-        String pattern = "[.]";
-        Pattern r = Pattern.compile(pattern);
-        parsed = original.split(pattern)[0];
+        //find and replace the word "Jeannie" with "Ada"
+        original = original.replace("Jeannie", "Ada");
 
-        //find an replace the word "Jeannie" with "Ada"
-        parsed = parsed.replace("Jeannie", "Ada");
-        Log.d("ShortenResult", "Parsed: " + parsed);
+        if(origLen <= 0) {
+            parsed = "Sorry, I didn't quite understand that.";
+            spoken = parsed;
+        }
+        else if(origLen > 0 && origLen <= max) {
+            parsed = original;
+            spoken = parsed;
+        }
+        else {  //origLen > max
+            spoken = "Here is what I found about that topic.";
+            finalOrig = original;
+            Log.d("AI", "Long String Length: " + origLen);
+            parsed = original.substring(0, max);
 
+            actionEnable = false;
+
+            alertDialog = new Dialog(SecuroBotSlaveMain.this);
+            LayoutInflater inflater = getLayoutInflater();
+            alertDialog.setContentView(inflater.inflate(R.layout.siri_dialog_layout, null));
+
+            Button backButton = (Button) alertDialog.findViewById(R.id.backButton);
+            Button readMoreButton = (Button) alertDialog.findViewById(R.id.readMore);
+            final TextView siriTextView = (TextView) alertDialog.findViewById(R.id.siriText);
+            ScrollView scrollView = (ScrollView) alertDialog.findViewById(R.id.scrollView);
+
+            siriTextView.setText(parsed + "...");   //first set the text to first max-0 characters
+
+            backButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AITimerInterrupt.run();
+                }
+            });
+
+            readMoreButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    resetAIInterractionTimer();
+
+                    siriTextView.setText(finalOrig);
+                }
+            });
+
+            siriTextView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    resetAIInterractionTimer();
+                }
+            });
+
+            alertDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialog) {
+                    AITimerInterrupt.run();
+                }
+            });
+
+            scrollView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+
+                @Override
+                public void onScrollChanged() {
+                    resetAIInterractionTimer();
+                }
+            });
+
+            alertDialog.show();
+            AIInteractionTimer.run();
+        }
+
+        final String finalParse;
+        if(origLen<=max) {
+            finalParse = parsed;
+        }
+        else {
+            finalParse = spoken;
+        }
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                t1.speak(finalParse, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        }, 1000); //adding one sec delay before talking to make sure UI changes stick
+
+        Log.d("AI", "Parsed: " + parsed);
         return parsed;
     }
+
+    private void resetAIInterractionTimer() {
+        mHandler.removeCallbacks(AIInteractionTimer);
+        mHandler.removeCallbacks(AITimerInterrupt);
+        AIInteractionTimer.run();
+        Log.d("AI", "Touch detected!");
+    }
+
+    //A timer that expires if the user does not interact with screen after X time
+    Runnable AIInteractionTimer = new Runnable(){
+        @Override
+        public void run() {
+            Log.d("AI", "Delay Started...");
+            mHandler.postDelayed(AITimerInterrupt, 30000);
+        }
+    };
+
+    //this is called by the interaction timer when time has expired, as long as it hasnt been pulled
+    //from the handler
+    Runnable AITimerInterrupt = new Runnable() {
+        @Override
+        public void run() {
+            mHandler.removeCallbacks(AIInteractionTimer);
+            Log.d("AI", "Delay Stopped.");
+            alertDialog.dismiss();
+            actionEnable = true;
+        }
+    };
 
     // convert InputStream to String
     private static String getStringFromInputStream(InputStream is) {
@@ -496,13 +612,6 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
 
             if(actionEnable){
                 if(re <= 1) {  //% chance that the head will rotate
-                    /*
-                    switch(ra){
-                        case 0: newPos = 1; break;    //limit 600
-                        case 1: newPos = 2; break;
-                        case 2: newPos = 3; break;   //limit 2450
-                        default: break;
-                    }*/
                     newPos = ra + 1;
 
                     if(newPos != currentPos)
@@ -551,23 +660,6 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 e.printStackTrace();
             }
             Thread.sleep(2000);
-
-            /*
-            int result = 0;
-            InputStream in = null;
-            while(result!=1) {
-                while(in == null) {
-                    in = uart.getInputStream();
-                }
-                try{
-                    result = in.read();
-                    Log.d("Serial", "Recieved result: " + result);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            */
 
             Log.d("Serial", "Done");
             currentPos = newPos;

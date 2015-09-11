@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
-    android:id="@+id/hackedLayout">
+    android:id="@+id/hackedLayout"
+    android:background="@color/blue">
 
 
     <ImageView
@@ -43,29 +44,29 @@
         android:layout_gravity="center_horizontal">
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Cancel"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/cancel" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Back"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/back" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Clear"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/clear" />
 
         <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="140dp"
+            android:layout_height="75dp"
             android:text="Search"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:id="@+id/ok" />

@@ -141,6 +141,25 @@ public class HackedEmailInputActivity extends AppCompatActivity {
             }
         });
 
+        emailAddress.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_ENTER && event.getAction()==KeyEvent.ACTION_UP) {
+                    Log.d("KeyListener", "Enter key pressed: " + keyCode);
+                    EditText email = (EditText) findViewById(R.id.emailAddressInput);
+                    String address = email.getText().toString();
+
+                    if( address != null && !address.isEmpty()) {
+                        String urlString = apiURL + address;
+                        new HIBPAPICall().execute(urlString);
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(), "Please enter a valid email address.", Toast.LENGTH_LONG).show();
+                    }
+                }
+                return false;
+            }
+        });
+
         breachListView = (ListView) findViewById(R.id.hackedListView);
 
         breachHeader = (TextView) findViewById(R.id.breachHeader);

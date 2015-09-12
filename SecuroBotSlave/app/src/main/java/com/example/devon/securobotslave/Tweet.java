@@ -42,6 +42,7 @@ public class Tweet {
         this.tweet = status.getText();
 
         parseTweet();
+        Log.d("FinalTweet", "Final Parsed " + contentType + " Content: " + getContent());
     }
 
     public String getTweetBy() {
@@ -53,29 +54,31 @@ public class Tweet {
     }
 
     private void parseTweet() {
+        /*
         Log.d("TweetParser", "Original Tweet:\n" + "Tweet By: " + tweetBy +
                 "\nTweet content: " + tweet);
-
+*/
         if(status.isRetweet()){
             Status nStatus = status.getRetweetedStatus();
             contentType = SECUROBOT_RT;
             parsedContent = nStatus.getText();
-            Log.d("TweetParser", "Found retweeted status!\n" + nStatus.getText());
+            parsedContent = removeLinks(parsedContent);
+            //Log.d("TweetParser", "Found retweeted status!\n" + nStatus.getText());
         }
         else {
             hashtags = status.getHashtagEntities();
-            Log.d("TweetParser", "Hashtags:");
-            for(HashtagEntity ht : hashtags) {
-                Log.d("TweetParser", ht.getText());
-                contentType = getTweetType();
-                parsedContent = removeHashtags(status.getText());
+            contentType = getTweetType();
+            parsedContent = removeHashtags(status.getText());
+            if(contentType != SECUROBOT_ARTICLE &&
+                    contentType != SECUROBOT_QUIZ &&
+                    contentType != SECUROBOT_RSSFEED) {
                 parsedContent = removeLinks(parsedContent);
             }
         }
     }
 
     private String removeHashtags(String withTags) {
-        String noTags;
+        String noTags = withTags;
 
         //grab just the link if one of the below types
         if(contentType == SECUROBOT_QUIZ ||
@@ -83,7 +86,7 @@ public class Tweet {
                 contentType == SECUROBOT_ARTICLE) {
             for(URLEntity l : status.getURLEntities()) {
                 URLs.add(l.getURL());
-                Log.d("Parsed URL", l.getURL());
+                //Log.d("Parsed URL", l.getURL());
             }
             noTags = URLs.get(0);
         }
@@ -101,7 +104,7 @@ public class Tweet {
 
                 try{
                     noTags = withTags.split(pattern)[1];
-                    Log.d("RegEx", "Parsed Status: " + noTags);
+                    //Log.d("RegEx", "Parsed Status: " + noTags);
                 }
                 catch(Exception e) {
                     Log.d("RegEx", "Error splitting string using RegEx. Hashtags will be included in final string...");
@@ -117,12 +120,18 @@ public class Tweet {
     }
 
     private String removeLinks(String withLinks) {
-        Log.d("RemoveLinks", "Original: " + withLinks);
-        String noLinks;
-        String pattern = "http://" + ".*";
+        //Log.d("RemoveLinks", "Original: " + withLinks);
+        String noLinks = withLinks;
+        String pattern = "http[s]?://t.co/\\w+\\S";
         Pattern r = Pattern.compile(pattern);
-        noLinks = withLinks.split(pattern)[0];
-        Log.d("RemoveLinks", "W/O links: " + noLinks);
+        try{
+            noLinks = withLinks.split(pattern)[0];
+            //Log.d("RemoveLinks", "W/O links: " + noLinks);
+        }
+        catch(Exception e) {
+            Log.d("RemoveLinks", "String only consists of a link, cannot split");
+            e.printStackTrace();
+        }
 
         return noLinks;
     }

@@ -21,6 +21,7 @@ import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,6 +55,7 @@ public class ActivityChooser extends Activity {
     ImageButton spkButton;
     TTSEngine t1;
     Dialog alertDialog;
+    RelativeLayout progress;
     boolean actionEnable = true;
     private final int REQ_CODE_SPEECH_INPUT = 100;
     private final static String baseAPIURL = "https://siris.p.mashape.com/api" +
@@ -72,6 +74,8 @@ public class ActivityChooser extends Activity {
         choiceTimer.run();
 
         spkButton = (ImageButton) findViewById(R.id.btnSpeak);
+        progress = (RelativeLayout) findViewById(R.id.progress);
+        progress.setVisibility(View.INVISIBLE);
 
         spkButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,6 +145,7 @@ public class ActivityChooser extends Activity {
                     @Override
                     public void run() {
                         spkButton.setImageResource(R.drawable.stop_audio);
+                        spkButton.setVisibility(View.VISIBLE);
                         actionEnable = false;
                         wasSpeaking = true;
                     }
@@ -339,9 +344,17 @@ public class ActivityChooser extends Activity {
         }
 
         @Override
+        protected void onPreExecute() {
+            spkButton.setVisibility(View.INVISIBLE);
+            progress.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
             parseResult(result);
+
+            progress.setVisibility(View.INVISIBLE);
 
             manageMicBtn.run();
         }

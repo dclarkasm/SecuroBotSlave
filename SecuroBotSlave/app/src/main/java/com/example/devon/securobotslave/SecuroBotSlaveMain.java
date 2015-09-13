@@ -32,6 +32,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -83,6 +84,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     String eastWest = "";
     ImageButton spkButton;
     ImageView logo;
+    RelativeLayout progress;
     //LocationListener locationListener;
     TwitterEngine te;
     Dialog alertDialog;
@@ -119,6 +121,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
 
         spkButton = (ImageButton) findViewById(R.id.btnSpeak);
         logo = (ImageView) findViewById(R.id.imageView);
+        progress = (RelativeLayout) findViewById(R.id.progress);
+        progress.setVisibility(View.INVISIBLE);
 
         spkButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -222,6 +226,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                     @Override
                     public void run() {
                         spkButton.setImageResource(R.drawable.stop_audio);
+                        spkButton.setVisibility(View.VISIBLE);
                         actionEnable = false;
                         wasSpeaking = true;
                     }
@@ -372,6 +377,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     }
 
     private class HIBPAPICall extends AsyncTask<String, Void, String> {
+
         @Override
         protected String doInBackground(String... urls) {
             String urlString = urls[0];
@@ -392,9 +398,17 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         }
 
         @Override
+        protected void onPreExecute() {
+            spkButton.setVisibility(View.INVISIBLE);
+            progress.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected void onPostExecute(final String result) {
             Log.d("Siri", "Recieved Result: " + result);
             parseResult(result);
+
+            progress.setVisibility(View.INVISIBLE);
 
             manageMicBtn.run();
         }

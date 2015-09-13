@@ -14,7 +14,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import twitter4j.Query;
+import twitter4j.*;
+
 import twitter4j.QueryResult;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
@@ -31,16 +32,6 @@ import twitter4j.conf.ConfigurationBuilder;
  */
 public class TwitterEngine {
     public TTSEngine engine;
-    /*
-    private ArrayList<String> parsedReTweets = new ArrayList<String>(); //list of the most recent retweets for speaking (parsed)
-    private ArrayList<String> parsedTips = new ArrayList<String>();
-    private ArrayList<String> parsedQuizLinks = new ArrayList<String>();
-    private ArrayList<String> parsedRSSLinks = new ArrayList<String>();
-    private ArrayList<String> parsedJokes = new ArrayList<String>();
-    private ArrayList<String> parsedArticleLinks = new ArrayList<String>();
-    private ArrayList<Tweet> parsedRandTweets = new ArrayList<Tweet>(); //list of the most recent random tweets for speaking (parsed)
-    private ArrayList<Tweet> parsedStatuses = new ArrayList<Tweet>(); //list of the most recent status updates for speaking (parsed)
-    */
     private Queue parsedTips = new LinkedList();
     private Queue parsedQuizLinks = new LinkedList();
     private Queue parsedRSSLinks = new LinkedList();
@@ -91,51 +82,55 @@ public class TwitterEngine {
         protected String doInBackground(String... params) {
             try {
                 User user = twitter.verifyCredentials();
-                List<twitter4j.Status> statuses = twitter.getUserTimeline();
-                Log.d("Twitter", "Showing @" + user.getScreenName() + "'s home timeline.");
-                for (twitter4j.Status status : statuses) {
-                    Log.d("Twitter", "@" + status.getUser().getScreenName() + " - " + status.getText());
-                    Tweet newTweet = new Tweet(status);
-                    String tweetContent = newTweet.getContent();
-                    if(tweetContent!=null) {
-                        parsedStatuses.add(tweetContent);
-                        Log.d("Twitter", "newTweetAdded: " + tweetContent);
-                        switch(newTweet.getContentType()) {
-                            case Tweet.SECUROBOT_ARTICLE:
-                                if(!parsedArticleLinks.contains(tweetContent)) {
-                                    parsedArticleLinks.add(tweetContent);
-                                }
-                                break;
-                            case Tweet.SECUROBOT_JOKE:
-                                if(!parsedJokes.contains(tweetContent)){
-                                    parsedJokes.add(tweetContent);
-                                }
-                                break;
-                            case Tweet.SECUROBOT_QUIZ:
-                                if(!parsedQuizLinks.contains(tweetContent)) {
-                                    parsedQuizLinks.add(tweetContent);
-                                }
-                                break;
-                            case Tweet.SECUROBOT_RSSFEED:
-                                if(!parsedRSSLinks.contains(tweetContent)) {
-                                    parsedRSSLinks.add(tweetContent);
-                                }
-                                break;
-                            case Tweet.SECUROBOT_TIP:
-                                if(!parsedTips.contains(tweetContent)) {
-                                    parsedTips.add(tweetContent);
-                                }
-                                break;
-                            case Tweet.SECUROBOT_RT:
-                                if(!parsedReTweets.contains(newTweet.getTweetBy() + " says " + tweetContent)) {
-                                    parsedReTweets.add(newTweet.getTweetBy() + " says " + tweetContent);
-                                }
-                                break;
-                            default: break;
+                Paging page = new Paging(1, 100);   //page #, # of tweets per page
+                List<twitter4j.Status> statuses = twitter.getUserTimeline("UNHSecuroBot", page);
+                if(!statuses.isEmpty()) {
+                    //Log.d("Twitter", "Showing @" + statuses.get(0).getUser().getScreenName() + "'s home timeline.");
+                    for (twitter4j.Status status : statuses) {
+                        //Log.d("Twitter", "@" + status.getUser().getScreenName() + " - " + status.getText());
+                        Tweet newTweet = new Tweet(status);
+                        String tweetContent = newTweet.getContent();
+                        if(tweetContent!=null) {
+                            parsedStatuses.add(tweetContent);
+                            //Log.d("Twitter", "newTweetAdded: " + tweetContent);
+                            switch(newTweet.getContentType()) {
+                                case Tweet.SECUROBOT_ARTICLE:
+                                    if(!parsedArticleLinks.contains(tweetContent)) {
+                                        parsedArticleLinks.add(tweetContent);
+                                    }
+                                    break;
+                                case Tweet.SECUROBOT_JOKE:
+                                    if(!parsedJokes.contains(tweetContent)){
+                                        parsedJokes.add(tweetContent);
+                                    }
+                                    break;
+                                case Tweet.SECUROBOT_QUIZ:
+                                    if(!parsedQuizLinks.contains(tweetContent)) {
+                                        parsedQuizLinks.add(tweetContent);
+                                    }
+                                    break;
+                                case Tweet.SECUROBOT_RSSFEED:
+                                    if(!parsedRSSLinks.contains(tweetContent)) {
+                                        parsedRSSLinks.add(tweetContent);
+                                    }
+                                    break;
+                                case Tweet.SECUROBOT_TIP:
+                                    if(!parsedTips.contains(tweetContent)) {
+                                        parsedTips.add(tweetContent);
+                                    }
+                                    break;
+                                case Tweet.SECUROBOT_RT:
+                                    if(!parsedReTweets.contains(newTweet.getTweetBy() + " says " + tweetContent)) {
+                                        parsedReTweets.add(newTweet.getTweetBy() + " says " + tweetContent);
+                                    }
+                                    break;
+                                default: break;
+                            }
+                            contentFetched = true;
                         }
-                        contentFetched = true;
                     }
                 }
+                else Log.d("Twitter", "No results returned for Timeline search");
             } catch (TwitterException te) {
                 te.printStackTrace();
                 Log.d("Twitter", "Failed to get timeline: " + te.getMessage());
@@ -157,7 +152,7 @@ public class TwitterEngine {
         protected void onProgressUpdate(Void... values) {}
     }
 
-    private class FetchRandomTweets extends AsyncTask<String, Void, String> {
+    private class FetchRandomTweets extends AsyncTask<String, Void, String> {   //only gets results from past week
         @Override
         protected String doInBackground(String... params) {
             for(String p : params) {
@@ -166,11 +161,17 @@ public class TwitterEngine {
                     QueryResult result;
                     result = twitter.search(query);
                     List<twitter4j.Status> tweets = result.getTweets();
-                    //The latest tweet is in the first spot in the list
-                    Log.d("Twitter", "@" + tweets.get(0).getUser().getScreenName() + " - " + tweets.get(0).getText());
-                    for(int i=0; i<10 && i<tweets.size(); i++) {
-                        parsedRandTweets.add(new Tweet(tweets.get(i)));
+                    if(!tweets.isEmpty()) {
+                        //The latest tweet is in the first spot in the list
+                        //Log.d("Twitter", "@" + tweets.get(0).getUser().getScreenName() + " - " + tweets.get(0).getText());
+                        for(int i=0; i<10 && i<tweets.size(); i++) {
+                            Tweet tweet = new Tweet(tweets.get(i));
+                            String tweetContent = tweet.getContent();
+                            parsedRandTweets.add(tweetContent);
+                            Log.d("RandTwitter", "@" + tweets.get(i).getUser().getScreenName() + " - " + tweets.get(i).getText());
+                        }
                     }
+                    else Log.d("RandTwitter", "No tweets found for query: " + p);
                 } catch (TwitterException te) {
                     te.printStackTrace();
                     Log.d("Twitter", "Failed to search tweets: " + te.getMessage());
@@ -245,16 +246,16 @@ public class TwitterEngine {
                 // get request token.
                 // this will throw IllegalStateException if access token is already available
                 RequestToken requestToken = twitter.getOAuthRequestToken();
-                Log.d("Twitter", "Got request token.");
-                Log.d("Twitter", "Request token: " + requestToken.getToken());
-                Log.d("Twitter", "Request token secret: " + requestToken.getTokenSecret());
+                //Log.d("Twitter", "Got request token.");
+                //Log.d("Twitter", "Request token: " + requestToken.getToken());
+                //Log.d("Twitter", "Request token secret: " + requestToken.getTokenSecret());
                 AccessToken accessToken = null;
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
                 while (null == accessToken) {
-                    Log.d("Twitter", "Open the following URL and grant access to your account:");
-                    Log.d("Twitter", requestToken.getAuthorizationURL());
-                    Log.d("Twitter", "Enter the PIN(if available) and hit enter after you granted access.[PIN]:");
+                    //Log.d("Twitter", "Open the following URL and grant access to your account:");
+                    //Log.d("Twitter", requestToken.getAuthorizationURL());
+                    //Log.d("Twitter", "Enter the PIN(if available) and hit enter after you granted access.[PIN]:");
                     String pin = br.readLine();
                     try {
                         if (pin.length() > 0) {
@@ -270,9 +271,9 @@ public class TwitterEngine {
                         }
                     }
                 }
-                Log.d("Twitter", "Got access token.");
-                Log.d("Twitter", "Access token: " + accessToken.getToken());
-                Log.d("Twitter", "Access token secret: " + accessToken.getTokenSecret());
+                //Log.d("Twitter", "Got access token.");
+                //Log.d("Twitter", "Access token: " + accessToken.getToken());
+                //Log.d("Twitter", "Access token secret: " + accessToken.getTokenSecret());
             } catch (IllegalStateException ie) {
                 // access token is already available, or consumer key/secret is not set.
                 if (!twitter.getAuthorization().isEnabled()) {

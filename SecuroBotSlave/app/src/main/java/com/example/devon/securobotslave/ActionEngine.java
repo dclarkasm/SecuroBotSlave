@@ -198,6 +198,7 @@ public class ActionEngine {
 
     public void fetchContent(){
         twitE.getTimeline();
+        executeTweetSearch(false);
     }
 
     public void populateContent() {

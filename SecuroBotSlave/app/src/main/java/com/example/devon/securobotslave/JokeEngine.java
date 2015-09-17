@@ -23,20 +23,18 @@ public class JokeEngine {
 
     public JokeEngine() {
         jokes.add("A guy walks into a bar. Ouch.");
-        /*jokes.add("Just kidding, cyber security is no joke, stop laughing.");
+        /*
         jokes.add("Your computer is a joke without virus protection. You should get some virus protection");
         //from http://www.ducksters.com/jokesforkids/computer.php
         jokes.add("What did the computer do at lunchtime? Had a byte");
         jokes.add("What does a baby computer call his father? Data.");
         jokes.add("Why did the computer keep sneezing? It had a virus.");
         jokes.add("What is a computer virus? A terminal illness");
-        jokes.add("Why did the computer sqweak? Because someone stepped on it's mouse.");
+        jokes.add("Why did the computer squeak? Because someone stepped on it's mouse.");
         //http://www.ajokeaday.com/Clasificacion.asp?ID=18
         jokes.add("Computers are like air conditioners. They work fine until you start opening windows");
         jokes.add("How many programmers does it take to change a lightbulb? " +
                 "None, thats a hardware problem.");
-        jokes.add("Computers can never replace humans. They may become capable of artificial intelligence,"+
-                "but they will never master real stupidity.");
         jokes.add("Why did the spider cross the computer keyboard? To get to the World Wide Web.");*/
     }
 

@@ -265,6 +265,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+
         switch (requestCode) {
             case REQUEST_ACTION_PICK:
                 if (resultCode == RESULT_OK) {
@@ -287,34 +289,42 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                             break;
                         case ActionEngine.ACTION_JOKE:
                             action.executeActivity(ActionEngine.ACTION_JOKE);
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                             break;
                         case ActionEngine.ACTION_TIP:
                             action.executeActivity(ActionEngine.ACTION_TIP);
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                             break;
                         case ActionEngine.ACTION_RSS:
                             action.executeActivity(ActionEngine.ACTION_RSS);
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                             break;
                         case ActionEngine.ACTION_TWEET:
                             action.executeActivity(ActionEngine.ACTION_TWEET);
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                             break;
                         case ActionEngine.ACTION_HACKED:
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                         case ActionEngine.ACTION_PICTURE:
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                         default:
                             Log.d("Action Chooser", "Uknown command: " + actionType);
+                            //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                             actionEnable = true;
                             break;
                     }
-                } else {
+                } else {    //chooser timed out or back button pressed from chooser activity
                     actionEnable = true;
                 }
                 break;
             case REQUEST_WEB_PAGE:
+                //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                 actionEnable = true;
                 break;
             case REQ_CODE_SPEECH_INPUT: {

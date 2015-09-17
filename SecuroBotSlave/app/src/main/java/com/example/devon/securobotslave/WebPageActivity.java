@@ -28,6 +28,8 @@ public class WebPageActivity extends AppCompatActivity {
         webPageView.setWebViewClient(new WebViewClient());
         WebSettings webPageSettings = webPageView.getSettings();
         webPageSettings.setJavaScriptEnabled(true);
+        //
+        webPageSettings.setUserAgentString("Mozilla/5.0 (iPhone; CPU iPhone OS 8_4_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) CriOS/45.0.2454.68 Mobile/12H321 Safari/600.1.4");
 
         webPageView.setOnTouchListener(new View.OnTouchListener() {
             @Override

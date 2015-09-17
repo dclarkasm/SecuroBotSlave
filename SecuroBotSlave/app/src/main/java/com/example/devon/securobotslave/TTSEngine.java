@@ -15,9 +15,14 @@ import java.util.Locale;
 public class TTSEngine implements TextToSpeech.OnInitListener{
     public TextToSpeech t1;
     public boolean isSpeaking = false;
+    public Handler mHandler;
+    String speakString;
+    int queueMode;
+    HashMap<String, String> params;
 
     public TTSEngine(Context c) {
         t1 = new TextToSpeech(c, this);
+        mHandler = new Handler();
     }
 
     public void onPause(){
@@ -52,13 +57,23 @@ public class TTSEngine implements TextToSpeech.OnInitListener{
     }
 
     public void speak(String string, int queueMode, HashMap<String, String> params){
-        while(t1.isSpeaking()); //wait until we finish speaking before saying something else
-        if(!t1.isSpeaking()){
-            //TODO: Add a one shot timer here to wait for a few ms for the TTS engine to begin speaking
-            params = new HashMap<String, String>();
-            params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,"AIFinished");
-            t1.speak(string, queueMode, params);
-            isSpeaking = true;
-        }
+        speakString = string;
+        this.queueMode = queueMode;
+        this.params = params;
+        speakRunnable.run();
     }
+
+    private Runnable speakRunnable = new Runnable() {
+        @Override
+        public void run() {
+            while(t1.isSpeaking()); //wait until we finish speaking before saying something else
+            if(!t1.isSpeaking()){
+                //TODO: Add a one shot timer here to wait for a few ms for the TTS engine to begin speaking
+                params = new HashMap<String, String>();
+                params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,"AIFinished");
+                t1.speak(speakString, queueMode, params);
+                isSpeaking = true;
+            }
+        }
+    };
 }

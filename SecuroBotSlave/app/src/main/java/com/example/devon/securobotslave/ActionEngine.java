@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -21,7 +23,7 @@ import java.util.logging.LogRecord;
 /**
  * Created by Devon on 7/5/2015.
  */
-public class ActionEngine {
+public class ActionEngine{
     public TTSEngine TTSE;
     private GreetingEngine greetingE = new GreetingEngine();
     private RSSEngine RSSFeed = new RSSEngine();
@@ -39,8 +41,6 @@ public class ActionEngine {
     public static final int ACTION_TIP = 5;
     public static final int ACTION_PICTURE = 6;
     public static final int ACTION_HACKED = 7;
-
-    private int currentAction;
 
     public ActionEngine(TTSEngine e) {
         setTTSEngine(e);
@@ -74,7 +74,6 @@ public class ActionEngine {
             case ACTION_HACKED: executeHacked(); break;
             default: executeTimelineSearch(true); break;
         }
-        currentAction = rn;
     }
 
     public void executeActivity(int ActivityType) {
@@ -88,11 +87,6 @@ public class ActionEngine {
             case ACTION_HACKED: executeHacked(); break;
             default: Log.d("ActionEngine", "Unknown Action"); return;
         }
-        currentAction = ActivityType;
-    }
-
-    public int getCurrentAction() {
-        return currentAction;
     }
 
     public void executeTweetSearch(boolean speak) {

@@ -83,7 +83,7 @@ public class TwitterEngine {
             try {
                 User user = twitter.verifyCredentials();
                 Paging page = new Paging(1, 100);   //page #, # of tweets per page
-                List<twitter4j.Status> statuses = twitter.getUserTimeline("UNHSecuroBot", page);
+                List<twitter4j.Status> statuses = twitter.getUserTimeline("Ada_SecuroBot", page);
                 if(!statuses.isEmpty()) {
                     //Log.d("Twitter", "Showing @" + statuses.get(0).getUser().getScreenName() + "'s home timeline.");
                     for (twitter4j.Status status : statuses) {

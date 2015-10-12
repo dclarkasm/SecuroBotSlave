@@ -42,20 +42,16 @@ public class TwitterEngine {
     private Queue parsedStatuses = new LinkedList(); //list of the most recent status updates for speaking (parsed)
     private String latestStatus;
     public Twitter twitter;
-    private static final String TWITTER_KEY = "JlxXwwVxSH8KuiqIktrNE2VQp";
-    private static final String TWITTER_SECRET = "4m1kuoWKOrHDLX7CulAs6uAzEKpjFUWUkweWFunQCXlZCVpGXm";
-    private static final String TWITTER_TOKEN = "3364737443-ilf4qCoDyaKcsD5fZME80qGpwmfMiv1yDgMaoJM";
-    private static final String TOKEN_SECRET = "YLZbvOwFOSa6akO50Pur3aTS059QTl5qUL4c8BScwHKA6";
     private boolean contentFetched = false;
 
     public TwitterEngine() {
         Log.d("Twitter", "Initializing Twitter...");
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
-                .setOAuthConsumerKey(TWITTER_KEY)
-                .setOAuthConsumerSecret(TWITTER_SECRET)
-                .setOAuthAccessToken(TWITTER_TOKEN)
-                .setOAuthAccessTokenSecret(TOKEN_SECRET);
+                .setOAuthConsumerKey(Constants.TWITTER_KEY)
+                .setOAuthConsumerSecret(Constants.TWITTER_SECRET)
+                .setOAuthAccessToken(Constants.TWITTER_TOKEN)
+                .setOAuthAccessTokenSecret(Constants.TOKEN_SECRET);
         TwitterFactory tf = new TwitterFactory(cb.build());
         twitter = tf.getInstance();
         Log.d("Twitter", "Twitter initialized");
@@ -83,7 +79,7 @@ public class TwitterEngine {
             try {
                 User user = twitter.verifyCredentials();
                 Paging page = new Paging(1, 100);   //page #, # of tweets per page
-                List<twitter4j.Status> statuses = twitter.getUserTimeline("Ada_SecuroBot", page);
+                List<twitter4j.Status> statuses = twitter.getUserTimeline(Constants.ADA_UNAME, page);
                 if(!statuses.isEmpty()) {
                     //Log.d("Twitter", "Showing @" + statuses.get(0).getUser().getScreenName() + "'s home timeline.");
                     for (twitter4j.Status status : statuses) {

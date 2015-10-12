@@ -358,8 +358,7 @@ public class CameraActivity extends AppCompatActivity {
                                     UID[0], te.twitter);
                         }
                         else {
-                            uploadPic(pictureFile, "Hanging out and learning about #cybersecurity" +
-                                    UID[0], te.twitter);
+                            uploadPic(pictureFile, "Hanging out and learning about #cybersecurity", te.twitter);
                         }
 
                         runOnUiThread(new Runnable() {

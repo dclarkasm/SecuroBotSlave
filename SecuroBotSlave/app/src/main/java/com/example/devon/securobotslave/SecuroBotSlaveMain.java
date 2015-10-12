@@ -92,7 +92,8 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     private final static String baseAPIURL = "https://siris.p.mashape.com/api" +
             "?clientFeatures=all" +
             "&out=simple" +
-            "&mashape-key=P1E9lfo11nmshUWpjMpaJKWb21eOp10cOjOjsnzoaqShqG4wnn" +
+            "&mashape-key=" +
+            Constants.SIRI_API_KEY +
             "&accept=text/plain" +
             "&input=";
     //**********************************************
@@ -658,6 +659,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                                         ", BaseVolt: " + iRSensors.baseVolt + "/" + measVolt
                         );
 
+                        moveToHomePosition();
                         action.executeGreeting();
                         Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
                         startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
@@ -674,7 +676,6 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
 
         private void moveToNewPosition() throws ConnectionLostException, InterruptedException {
 
-
             OutputStream out = uart.getOutputStream();
             try {
                 out.write(newPos);
@@ -687,7 +688,22 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
 
             Log.d("Serial", "Done");
             currentPos = newPos;
+        }
 
+        private void moveToHomePosition() throws ConnectionLostException, InterruptedException {
+            OutputStream out = uart.getOutputStream();
+            newPos = 2;
+            try {
+                out.write(newPos);
+                Log.d("Serial", "Move to Home: " + newPos);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+            Thread.sleep(2000);
+
+            Log.d("Serial", "Done");
+            currentPos = newPos;
         }
 
         public boolean initSerial() throws InterruptedException, ConnectionLostException{

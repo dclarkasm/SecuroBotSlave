@@ -64,7 +64,6 @@
             android:layout_height="200dp"
             android:id="@+id/tipButton"
             android:layout_gravity="center_horizontal|bottom"
-            android:textColor="#000000"
             android:background="@drawable/tip_button"
             android:alpha="0.5"
             android:textSize="25dp"

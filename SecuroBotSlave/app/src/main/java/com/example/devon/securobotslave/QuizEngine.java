@@ -18,7 +18,7 @@ public class QuizEngine{
     private Queue quizes = new ArrayBlockingQueue(queueSize);   //initial array. we add content via constructor and addContent()
 
     public QuizEngine() {
-        quizes.add("https://www.onlineassessmenttool.com/test/assessment-26343");
+        quizes.add("https://www.onlinequizcreator.com/cyber-quiz-v1/quiz-115974");
     }
 
     public String generateQuiz() {

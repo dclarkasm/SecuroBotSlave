@@ -61,7 +61,8 @@ public class ActivityChooser extends Activity {
     private final static String baseAPIURL = "https://siris.p.mashape.com/api" +
             "?clientFeatures=all" +
             "&out=simple" +
-            "&mashape-key=P1E9lfo11nmshUWpjMpaJKWb21eOp10cOjOjsnzoaqShqG4wnn" +
+            "&mashape-key=" +
+            Constants.SIRI_API_KEY +
             "&accept=text/plain" +
             "&input=";
 

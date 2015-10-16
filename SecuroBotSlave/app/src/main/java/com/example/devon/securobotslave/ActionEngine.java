@@ -31,6 +31,7 @@ public class ActionEngine{
     private JokeEngine jokeE = new JokeEngine();
     private TipEngine tipE = new TipEngine();
     protected TwitterEngine twitE = new TwitterEngine();
+    private FundraiserEngine fundE = new FundraiserEngine();
     private Random r = new Random();
 
     public static final int ACTION_TWEET = 0;
@@ -59,6 +60,10 @@ public class ActionEngine{
 
     public void executeGreeting() {
         executeSpeech(greetingE.generateGreeting());
+    }
+
+    public void executeFRGreeting() {
+        executeSpeech(fundE.generateGreeting());
     }
 
     public void executeRandActivity() {
@@ -180,6 +185,10 @@ public class ActionEngine{
 
     public String getWebPage() {
         return RSSFeed.getLink();
+    }
+
+    public String getFRWebPage() {
+        return fundE.getLink();
     }
 
     public String getQuiz() {

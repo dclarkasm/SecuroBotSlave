@@ -4,10 +4,25 @@ package com.example.devon.securobotslave;
  * Created by devonclark on 10/12/15.
  */
 public class Constants {
+    /*
     public static final String SIRI_API_KEY = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     public static final String TWITTER_KEY = "XXXXXXXXXXXXXXXXXXXXXXXXX";
     public static final String TWITTER_SECRET = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     public static final String TWITTER_TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     public static final String TOKEN_SECRET = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
     public static final String ADA_UNAME = "XXXXXXXXXXXXX";
+    */
+
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    public static final String SIRI_API_KEY = "P1E9lfo11nmshUWpjMpaJKWb21eOp10cOjOjsnzoaqShqG4wnn";
+    //XXXXXXXXXXXXXXXXXXXXXXXXX
+    public static final String TWITTER_KEY = "JlxXwwVxSH8KuiqIktrNE2VQp";
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    public static final String TWITTER_SECRET = "4m1kuoWKOrHDLX7CulAs6uAzEKpjFUWUkweWFunQCXlZCVpGXm";
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    public static final String TWITTER_TOKEN = "3364737443-ilf4qCoDyaKcsD5fZME80qGpwmfMiv1yDgMaoJM";
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    public static final String TOKEN_SECRET = "YLZbvOwFOSa6akO50Pur3aTS059QTl5qUL4c8BScwHKA6";
+    //XXXXXXXXXXXXX
+    public static final String ADA_UNAME = "Ada_SecuroBot";
 }

@@ -59,7 +59,8 @@
             android:src="@drawable/mic_icon"
             android:background="#000000"
             android:layout_above="@+id/textView7"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:visibility="invisible" />
 
         <TextView
             android:layout_width="400dp"
@@ -69,14 +70,16 @@
             android:text="Click the logo to start a new activity or click the mic to speak"
             android:id="@+id/textView7"
             android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true"
+            android:visibility="invisible" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/textView7"
             android:layout_centerHorizontal="true"
-            android:id="@+id/progress">
+            android:id="@+id/progress"
+            android:visibility="invisible">
 
             <ProgressBar
                 style="?android:attr/progressBarStyleLarge"
@@ -84,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/progressBar"
                 android:indeterminate = "true"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true"/>
 
         </RelativeLayout>
 

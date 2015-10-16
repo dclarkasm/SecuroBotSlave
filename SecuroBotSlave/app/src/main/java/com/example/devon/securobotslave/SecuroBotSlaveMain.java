@@ -146,9 +146,20 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 if(actionEnable) {
 
                     actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
-                    action.executeGreeting();
-                    Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
-                    startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+                    /****** FOR NORMAL USE
+                     action.executeGreeting();
+                     Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+                     startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+                     *******/
+
+                    /**
+                     * FOR FUNDRAISER USE
+                     */
+                    action.executeFRGreeting();
+                    Intent articleIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
+                    articleIntent.putExtra("URL", action.getFRWebPage());
+                    startActivityForResult(articleIntent, REQUEST_WEB_PAGE);
+                    actionEnable = false;
 
                     Log.d("Main", "Touch detected!");
                 }
@@ -660,9 +671,20 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                         );
 
                         moveToHomePosition();
-                        action.executeGreeting();
-                        Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
-                        startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+                        /****** FOR NORMAL USE
+                         action.executeGreeting();
+                         Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+                         startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+                         *******/
+
+                        /**
+                         * FOR FUNDRAISER USE
+                         */
+                        action.executeFRGreeting();
+                        Intent articleIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
+                        articleIntent.putExtra("URL", action.getFRWebPage());
+                        startActivityForResult(articleIntent, REQUEST_WEB_PAGE);
+                        actionEnable = false;
 
                         Log.d("IR SENSORS", "reinitializing...");
                         initIR();

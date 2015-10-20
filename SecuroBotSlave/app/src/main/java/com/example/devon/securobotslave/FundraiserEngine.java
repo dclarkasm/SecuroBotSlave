@@ -17,10 +17,12 @@ public class FundraiserEngine {
             "Hola.",
             "Hi, there.",
             "Greetings, Earthling.",
-            "What's up Dog.",
             "Hello my hommie.",
             "What is up my hommie.",
-            "Hey, cutie."
+            "Hey, cutie.",
+            "Yo yo yo.",
+            "Damn girl, you look good!",
+            "Wazz up!"
     };
 
     private static final String cause = "The Jeffery Hayzzel Count Me In Challenge";
@@ -38,7 +40,16 @@ public class FundraiserEngine {
             " Its not that hard, just donate to " + cause + ".",
             " Donate to " + cause + ". Its so easy, even a human could do it.",
             " Would you like to see your Dean dress up as a disco dancer? Just donate to " + cause + ".",
-            " Be a winner, not a looser. Donate to " + cause + "."
+            " Be a winner, not a looser. Donate to " + cause + ".",
+            " Donate to " + cause + ", and let's win this thing!",
+            " You don't want to loose to the Lee college do you? Donate now to " + cause + ".",
+            " Let's go get m tiger! Donate to " + cause + ".",
+            " We aint gonna win if you don't play! Donate to " + cause + ".",
+            " I don't like getting my ass kicked! Donate to " + cause + ".",
+            " Don't hesitate, donate to " + cause + ".",
+            " Show me the money! donate to " + cause + ".",
+
+
     };
     String link = "https://makeithappen.newhaven.edu/project/844/donate";
 

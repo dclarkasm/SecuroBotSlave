@@ -1,5 +1,6 @@
 package com.example.devon.securobotslave;
 
+import java.util.Calendar;
 import java.util.Random;
 
 /**
@@ -8,12 +9,18 @@ import java.util.Random;
 public class GreetingEngine {
     private Random r = new Random();
     private static final String greetings[] = {
-            "Hello, student.",
+            //"Hello, student.",
             "Hi, How are you today?",
             "Hello, would you like to learn something about cyber security?",
             "How's it going?",
             "Hey there.",
-            "Come and learn something about cyber security."
+            "Come and learn something about cyber security.",
+            "Hello, there.",
+            "Howdy.",
+            "Greetings human.",
+            "Hola.",
+            "Hi, there.",
+            "Greetings, Earthling.",
     };
 
     public String generateGreeting() {

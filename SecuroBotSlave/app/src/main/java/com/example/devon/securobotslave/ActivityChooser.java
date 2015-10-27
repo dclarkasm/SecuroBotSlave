@@ -52,6 +52,7 @@ public class ActivityChooser extends Activity {
     private Intent data = new Intent();
     private Random r = new Random();
     Handler mHandler;
+    private AsyncTask AITask;
     ImageButton spkButton;
     TTSEngine t1;
     Dialog alertDialog;
@@ -285,7 +286,7 @@ public class ActivityChooser extends Activity {
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
                     String urlString = baseAPIURL + makeString4GET(result.get(0));
-                    new HIBPAPICall().execute(urlString);
+                    AITask = new AIAPICall().execute(urlString);
                 }
                 else {
                     actionEnable = true;
@@ -324,7 +325,9 @@ public class ActivityChooser extends Activity {
         }
     }
 
-    private class HIBPAPICall extends AsyncTask<String, Void, String> {
+
+    private class AIAPICall extends AsyncTask<String, Void, String> {
+
         @Override
         protected String doInBackground(String... urls) {
             String urlString = urls[0];
@@ -348,6 +351,7 @@ public class ActivityChooser extends Activity {
         protected void onPreExecute() {
             spkButton.setVisibility(View.INVISIBLE);
             progress.setVisibility(View.VISIBLE);
+            AILoadTimer.run();
         }
 
         @Override
@@ -356,6 +360,9 @@ public class ActivityChooser extends Activity {
             parseResult(result);
 
             progress.setVisibility(View.INVISIBLE);
+
+            mHandler.removeCallbacks(AILoadInterrupt);
+            mHandler.removeCallbacks(AILoadTimer);
 
             manageMicBtn.run();
         }
@@ -488,6 +495,29 @@ public class ActivityChooser extends Activity {
             actionEnable = true;
         }
     };
+
+    Runnable AILoadTimer = (new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(AILoadInterrupt, 10000);
+        }
+    });
+
+    Runnable AILoadInterrupt = (new Runnable() {
+        @Override
+        public void run() {
+            progress.setVisibility(View.INVISIBLE);
+
+            mHandler.removeCallbacks(AILoadInterrupt);
+            mHandler.removeCallbacks(AILoadTimer);
+
+            manageMicBtn.run();
+            //stop the HIBPAPICall task
+            AITask.cancel(true);
+
+            t1.speak("Sorry, it seems my network connection is a bit slow. Lets talk about this later.", TextToSpeech.QUEUE_FLUSH, null);
+        }
+    });
 
     // convert InputStream to String
     private static String getStringFromInputStream(InputStream is) {

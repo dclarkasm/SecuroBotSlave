@@ -25,6 +25,10 @@ public class GreetingEngine {
 
     public String generateGreeting() {
         int rn = r.nextInt(greetings.length-0);
-        return greetings[rn] + " Select an activity from my menu.";
+        return greetings[rn];
+    }
+
+    public String generateInstruction() {
+        return "Select an activity from my menu.";
     }
 }

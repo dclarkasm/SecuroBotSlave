@@ -9,7 +9,7 @@ import java.util.Random;
  * Created by Devon on 10/16/2015.
  */
 public class FundraiserEngine {
-    private static final int gameTime[] = {26, 50};
+    private static final int gameTime[] = {13, 0};
     private Random r = new Random();
     private static final String greetings[] = {
             /*
@@ -41,9 +41,13 @@ public class FundraiserEngine {
             "I love watching football, just dont ask me to play.",
             "I really hope we win the challenge. Ive been raising funds like its my job.",
             "Go blue!",
-            "*TIME*",
             "Haven't you ever seen a robot at a football game before?",
-            "Don't mind me, I'm just a cute robot that enjoys going to football games."
+            "Don't mind me, I'm just a cute robot that enjoys going to football games.",
+            "Go UNH",
+            "Rah, rah Ree, Kick 'em in the knee. Rah, rah, rass, Kick 'em in the other knee.",
+            "We hope you enjoy the Blue Out today!",
+            "Check out our awesome marching band!",
+            "*TIME*",
     };
 
     private static final String cause = "The Jeffery Hayzzel Count Me In Challenge";

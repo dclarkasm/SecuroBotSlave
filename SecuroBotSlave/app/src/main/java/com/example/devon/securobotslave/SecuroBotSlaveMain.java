@@ -73,6 +73,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
     private static final int REQUEST_ACTION_PICK = 1;
     private static final int REQUEST_WEB_PAGE = 2;
     private Handler mHandler;
+    private AsyncTask AITask;
     private Random r = new Random();
     boolean actionEnable = true;
     TTSEngine t1;
@@ -145,22 +146,23 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
             public void onClick(View v) {
                 if(actionEnable) {
 
-                    /****** FOR NORMAL USE
-                     actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
-                     action.executeGreeting();
-                     Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
-                     startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
-                     *******/
+                    ///****** FOR NORMAL USE
+                    actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
+                    //action.executeGreeting();
+                    action.executeInstruction();
+                    Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+                    startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
+                    //*******/
 
                     /**
-                     * FOR FUNDRAISER USE*/
+                     * FOR FUNDRAISER USE
                     //actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
                     action.executeFRGreeting();
                     //Intent articleIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
                     //articleIntent.putExtra("URL", action.getFRWebPage());
                     //startActivityForResult(articleIntent, REQUEST_WEB_PAGE);
                     //actionEnable = false;
-                    //*/
+                    */
 
                     Log.d("Main", "Touch detected!");
                 }
@@ -340,14 +342,14 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                 startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
                 actionEnable = true;
                 break;
-            case REQ_CODE_SPEECH_INPUT: {
+            case REQ_CODE_SPEECH_INPUT: {   //AI
                 if (resultCode == RESULT_OK && null != data) {
 
                     ArrayList<String> result = data
                             .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 
                     String urlString = baseAPIURL + makeString4GET(result.get(0));
-                    new HIBPAPICall().execute(urlString);
+                    AITask = new AIAPICall().execute(urlString);
                 }
                 else {
                     actionEnable = true;
@@ -399,7 +401,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         }
     }
 
-    private class HIBPAPICall extends AsyncTask<String, Void, String> {
+    private class AIAPICall extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... urls) {
@@ -424,6 +426,7 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         protected void onPreExecute() {
             spkButton.setVisibility(View.INVISIBLE);
             progress.setVisibility(View.VISIBLE);
+            AILoadTimer.run();
         }
 
         @Override
@@ -432,6 +435,9 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
             parseResult(result);
 
             progress.setVisibility(View.INVISIBLE);
+
+            mHandler.removeCallbacks(AILoadInterrupt);
+            mHandler.removeCallbacks(AILoadTimer);
 
             manageMicBtn.run();
         }
@@ -565,6 +571,43 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
         }
     };
 
+    Runnable AILoadTimer = (new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(AILoadInterrupt, 10000);
+        }
+    });
+
+    Runnable AILoadInterrupt = (new Runnable() {
+        @Override
+        public void run() {
+            progress.setVisibility(View.INVISIBLE);
+
+            mHandler.removeCallbacks(AILoadInterrupt);
+            mHandler.removeCallbacks(AILoadTimer);
+
+            manageMicBtn.run();
+            //stop the HIBPAPICall task
+            AITask.cancel(true);
+
+            t1.speak("Sorry, it seems my network connection is a bit slow. Lets talk about this later.", TextToSpeech.QUEUE_FLUSH, null);
+        }
+    });
+
+    Runnable GreetingTimer = (new Runnable() {
+        @Override
+        public void run() {
+            mHandler.postDelayed(GreetingInterrupt, 5000);
+        }
+    });
+
+    Runnable GreetingInterrupt = (new Runnable() {
+        @Override
+        public void run() {
+            actionEnable = true;
+        }
+    });
+
     // convert InputStream to String
     private static String getStringFromInputStream(InputStream is) {
 
@@ -663,7 +706,6 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                     float measVolt = iRSensors.input.getVoltage();
                     //Log.d("Sensors", "meas Val: " + measVal + ", measVol: " + measVolt);
                     if(iRSensors.motionDetect(measVal, measVolt)) {
-                        actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
                         //pwm.close();
                         led_.write(false);
                         Log.d("MOTION", "Detected motion!"
@@ -672,20 +714,23 @@ public class SecuroBotSlaveMain extends IOIOActivity implements LocationListener
                         );
 
                         moveToHomePosition();
-                        /****** FOR NORMAL USE
-                         action.executeGreeting();
-                         Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
-                         startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
-                         *******/
+                        /****** FOR NORMAL USE*******/
+                        actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
+                        action.executeGreeting();
+                        GreetingTimer.run();
+                        //Intent pickActionIntent = new Intent(SecuroBotSlaveMain.this, ActivityChooser.class);
+                        //startActivityForResult(pickActionIntent, REQUEST_ACTION_PICK);
 
                         /**
                          * FOR FUNDRAISER USE
-                         */
+
+                        //actionEnable = false;   //make sure we do this before anything else so we dont double trigger (IR & touch)
                         action.executeFRGreeting();
                         //Intent articleIntent = new Intent(SecuroBotSlaveMain.this, WebPageActivity.class);
                         //articleIntent.putExtra("URL", action.getFRWebPage());
                         //startActivityForResult(articleIntent, REQUEST_WEB_PAGE);
                         //actionEnable = false;
+                        */
 
                         Log.d("IR SENSORS", "reinitializing...");
                         initIR();

@@ -62,6 +62,8 @@ public class ActionEngine{
         executeSpeech(greetingE.generateGreeting());
     }
 
+    public void executeInstruction() { executeSpeech(greetingE.generateInstruction());}
+
     public void executeFRGreeting() {
         executeSpeech(fundE.generateGreeting());
     }

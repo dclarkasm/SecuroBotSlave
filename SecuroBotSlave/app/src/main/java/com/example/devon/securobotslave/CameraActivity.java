@@ -354,11 +354,11 @@ public class CameraActivity extends AppCompatActivity {
                         Log.d("Twitter", "Trying to update status...");
 
                         if(user!=null) {
-                            uploadPic(pictureFile, "Having a ball of a time at the @UNH homecoming game with " +
-                                    UID[0] + " @UNHChargers @UNHcFREG #TheBlueOut", te.twitter);
+                            uploadPic(pictureFile, "Hanging out and learning about cyber security with @" +
+                                    UID[0] + " #cybersecurity", te.twitter);
                         }
                         else {
-                            uploadPic(pictureFile, "@UNHChargers Having a ball of a time at the @UNH homecoming game! @UNHChargers @UNHcFREG #TheBlueOut", te.twitter);
+                            uploadPic(pictureFile, "Hanging out and learning about #cybersecurity!", te.twitter);
                         }
 
                         runOnUiThread(new Runnable() {
